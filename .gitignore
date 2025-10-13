@@ -1,0 +1,14 @@
+node_modules
+plan.md
+parse.py
+Dockerfile
+README.md
+package-lock.json
+something.json
+migrations
+.vercel
+dist
+yarn.lock
+.adminjs
+.gitpod.yml
+
