@@ -8,7 +8,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "swagger:generate": "ts-node generate_swagger.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.3.7",

@@ -67,7 +67,6 @@ export const merchants = pgTable(
     ),
     //stripeAccountId: text("stripe_account_id"),
     accountId: text("account_id"),
-    recipientCode: text("recipient_code"),
     payoutSchedule: varchar("payout_schedule").default("weekly"),
     lastPayoutDate: timestamp("last_payout_date", { mode: "date" }),
     banner: varchar("banner", { length: 255 }),

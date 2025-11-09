@@ -4,7 +4,7 @@ import { AdminRole } from "../types/roles.js";
 
 /**
  * @swagger
- * /admin/login:
+ * /adminv/login:
  *   post:
  *     summary: Admin sign-in
  *     tags: [Admin]

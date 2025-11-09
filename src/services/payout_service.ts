@@ -1,17 +1,15 @@
-import { eq, and, lt, sum } from "drizzle-orm";
+import { eq, and, lt } from "drizzle-orm";
 import { db } from "../config/database.js";
 import { payouts } from "../models/payout.js";
 import { orderMerchantSplits } from "../models/order_merchant_split.js";
 import { merchants } from "../models/merchant.js";
-import { config } from "../config/index.js";
 import { logger } from "../utils/logger.js";
 import {
   sendPayoutNotificationEmail,
   sendPayoutFailedEmail,
 } from "../utils/email.js";
-
-const { Paystack } = require("@paystack/paystack-sdk");
-const paystack = new Paystack(config.paystack.secretKey);
+import { initiateTransfer, verifyTransfer } from "./paystack_service.js";
+import { merchantBankDetails } from "../models/bank_details.js";
 
 export const aggregateEligiblePayouts = async () => {
   logger.info("Starting automatic payout aggregation...");
@@ -46,10 +44,16 @@ export const aggregateEligiblePayouts = async () => {
         0
       );
 
-      // Check if merchant has recipient code
-      if (!merchant.recipientCode) {
+      // Fetch bank details to get recipient code
+      const [bankDetails] = await db
+        .select()
+        .from(merchantBankDetails)
+        .where(eq(merchantBankDetails.merchantId, merchant.id));
+
+      // Check if merchant has recipient code in bank details
+      if (!bankDetails?.recipientCode) {
         logger.warn(
-          `Merchant ${merchant.id} has no recipient code, skipping payout`
+          `Merchant ${merchant.id} has no recipient code in bank details, skipping payout`
         );
         continue;
       }
@@ -61,7 +65,7 @@ export const aggregateEligiblePayouts = async () => {
           merchantId: merchant.id,
           amount: totalAmount.toFixed(2),
           status: "pending",
-          payoutAccountId: merchant.recipientCode,
+          payoutAccountId: bankDetails.recipientCode,
         })
         .returning();
 
@@ -86,7 +90,7 @@ export const aggregateEligiblePayouts = async () => {
     throw error;
   }
 };
-/*
+
 export const processPayout = async (payoutId: string, adminId?: string) => {
   return await db.transaction(async (tx) => {
     const [payout] = await tx
@@ -98,55 +102,84 @@ export const processPayout = async (payoutId: string, adminId?: string) => {
     if (payout.status !== "pending")
       throw new Error(`Payout status is ${payout.status}`);
 
-    // Verify eligible amount from splits
-    const eligibleAmount = await tx
-      .select({ total: sum(orderMerchantSplits.amountDue) })
-      .from(orderMerchantSplits)
-      .where(
-        and(
-          eq(orderMerchantSplits.merchantId, payout.merchantId),
-          eq(orderMerchantSplits.status, "payout_requested"),
-          lt(orderMerchantSplits.holdUntil, new Date())
-        )
-      );
-
-    const calculatedAmount = Number(eligibleAmount[0].total || 0);
-    if (Math.abs(calculatedAmount - Number(payout.amount)) > 0.01) {
-      throw new Error(
-        `Amount mismatch: expected ${payout.amount}, got ${calculatedAmount}`
-      );
-    }
-
     const [merchant] = await tx
       .select()
       .from(merchants)
       .where(eq(merchants.id, payout.merchantId));
 
-    if (!merchant.recipientCode)
-      throw new Error("No recipient code set for merchant");
+    if (!merchant) throw new Error("Merchant not found");
+
+    // Fetch bank details to get recipient code
+    const [bankDetails] = await tx
+      .select()
+      .from(merchantBankDetails)
+      .where(eq(merchantBankDetails.merchantId, payout.merchantId));
+
+    if (!bankDetails?.recipientCode) {
+      throw new Error("No recipient code set for merchant in bank details");
+    }
+
+    // Mark related splits as "processing"
+    await tx
+      .update(orderMerchantSplits)
+      .set({ status: "processing", updatedAt: new Date() })
+      .where(
+        and(
+          eq(orderMerchantSplits.merchantId, payout.merchantId),
+          eq(orderMerchantSplits.status, "payout_requested")
+        )
+      );
 
     // Initiate Paystack transfer
-    const transfer = await paystack.transfer.create({
+    const transfer = await initiateTransfer({
       source: "balance",
       amount: Math.round(Number(payout.amount) * 100), // Convert to kobo
-      recipient: merchant.recipientCode,
+      recipient: bankDetails.recipientCode,
       reference: `payout_${payout.id}`,
       reason: `Payout for ${merchant.storeName}`,
     });
 
-    // Update payout status
+    // Verify the transfer immediately
+    const verification = await verifyTransfer(transfer.reference);
+
+    // Update payout based on verification status
+    const finalStatus = verification.status === "success" ? "completed" : "processing";
+
     await tx
       .update(payouts)
       .set({
-        status: "processing",
-        paystackTransferId: transfer.data.transfer_code,
+        status: finalStatus,
+        paystackTransferId: transfer.transfer_code,
         updatedAt: new Date(),
       })
       .where(eq(payouts.id, payoutId));
 
-    logger.info(
-      `Payout ${payoutId} initiated for merchant ${merchant.storeName}. Transfer code: ${transfer.data.transfer_code}`
-    );
+    // If transfer is successful, update splits to "paid"
+    if (finalStatus === "completed") {
+      await tx
+        .update(orderMerchantSplits)
+        .set({ status: "paid", updatedAt: new Date() })
+        .where(
+          and(
+            eq(orderMerchantSplits.merchantId, payout.merchantId),
+            eq(orderMerchantSplits.status, "processing")
+          )
+        );
+
+      // Update merchant totals
+      const newTotalPayouts = (
+        Number(merchant.totalPayouts || 0) + Number(payout.amount)
+      ).toFixed(2);
+
+      await tx
+        .update(merchants)
+        .set({
+          totalPayouts: newTotalPayouts,
+          lastPayoutDate: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(merchants.id, payout.merchantId));
+    }
 
     // Send notification email
     await sendPayoutNotificationEmail(
@@ -155,52 +188,7 @@ export const processPayout = async (payoutId: string, adminId?: string) => {
       Number(payout.amount)
     );
 
-    return { payout, transfer: transfer.data };
-  });
-};
-*/
-
-export const processPayout = async (payoutId: string, adminId?: string) => {
-  return await db.transaction(async (tx) => {
-    const [payout] = await tx
-      .select()
-      .from(payouts)
-      .where(eq(payouts.id, payoutId));
-
-    if (!payout) throw new Error("Payout not found");
-    if (payout.status !== "pending")
-      throw new Error(`Payout status is ${payout.status}`);
-
-    const [merchant] = await tx
-      .select()
-      .from(merchants)
-      .where(eq(merchants.id, payout.merchantId));
-
-    // Initiate Paystack transfer
-    const transfer = await paystack.transfer.create({
-      source: "balance",
-      amount: Math.round(Number(payout.amount) * 100),
-      recipient: merchant.recipientCode,
-      reference: `payout_${payout.id}`,
-      reason: `Payout for ${merchant.storeName}`,
-    });
-
-    await tx
-      .update(payouts)
-      .set({
-        status: "processing",
-        paystackTransferId: transfer.data.transfer_code,
-        updatedAt: new Date(),
-      })
-      .where(eq(payouts.id, payoutId));
-
-    await sendPayoutNotificationEmail(
-      merchant.workEmail,
-      merchant.storeName,
-      Number(payout.amount)
-    );
-
-    return { payout, transfer: transfer.data };
+    return { payout: { ...payout, status: finalStatus }, transfer: transfer };
   });
 };
 
@@ -232,7 +220,7 @@ export const handleTransferWebhook = async (event: any) => {
       .where(
         and(
           eq(orderMerchantSplits.merchantId, payout.merchantId),
-          eq(orderMerchantSplits.status, "payout_requested")
+          eq(orderMerchantSplits.status, "processing")
         )
       );
 
@@ -242,12 +230,14 @@ export const handleTransferWebhook = async (event: any) => {
       .from(merchants)
       .where(eq(merchants.id, payout.merchantId));
 
+    const newTotalPayouts = (
+      Number(merchant.totalPayouts || 0) + Number(payout.amount)
+    ).toFixed(2);
+
     await db
       .update(merchants)
       .set({
-        totalPayouts: (
-          Number(merchant.totalPayouts) + Number(payout.amount)
-        ).toFixed(2),
+        totalPayouts: newTotalPayouts,
         lastPayoutDate: new Date(),
         updatedAt: new Date(),
       })
@@ -282,11 +272,11 @@ export const handleTransferWebhook = async (event: any) => {
       .where(
         and(
           eq(orderMerchantSplits.merchantId, payout.merchantId),
-          eq(orderMerchantSplits.status, "payout_requested")
+          eq(orderMerchantSplits.status, "processing")
         )
       );
 
-    // Get merchant and send failure notification
+    // Send failure notification
     const [merchant] = await db
       .select()
       .from(merchants)

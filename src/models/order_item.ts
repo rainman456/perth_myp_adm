@@ -9,12 +9,14 @@ import {
 import { relations } from "drizzle-orm";
 import { orders } from "./order";
 import { products } from "./products";
+import { variants } from "./variant";
 import { merchants } from "./merchant";
 
 export const orderItems = pgTable("order_items", {
   id: uuid("id").defaultRandom().primaryKey(),
   orderId: uuid("order_id").notNull(),
   productId: uuid("product_id").notNull(),
+  variantId: uuid("variant_id").notNull(),
   merchantId: uuid("merchant_id").notNull(),
   quantity: integer("quantity").notNull(),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
@@ -34,6 +36,10 @@ export const orderItemRelations = relations(orderItems, ({ one }) => ({
   product: one(products, {
     fields: [orderItems.productId],
     references: [products.id],
+  }),
+  variant: one(variants, {
+    fields: [orderItems.variantId],
+    references: [variants.id],
   }),
   merchant: one(merchants, {
     fields: [orderItems.merchantId],

@@ -152,7 +152,6 @@ async addAttribute(id: string, key: string, value: any): Promise<Category | null
 
 
 
-
 import { z } from 'zod';
 import { CategoryRepository } from '../repositories/category_repository';
 import { categories } from '../models/category';
@@ -160,17 +159,17 @@ import { categories } from '../models/category';
 // Validation schemas
 const categorySchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  parentId: z.string().nullable().optional(), // Align with Drizzle's nullable
-  attributes: z.record(z.any()).nullable().optional(), // Align with JSONB
+  parentId: z.number().nullable().optional(),  // Integer, nullable
+  attributes: z.record(z.any()).nullable().optional(),
 });
 
 const updateCategorySchema = categorySchema.partial();
 
 // Interface for Category (aligned with Drizzle schema)
 interface Category {
-  id: string;
+  id: number;
   name: string;
-  parentId: string | null;
+  parentId: number | null;
   attributes: Record<string, any> | null;
   createdAt: Date | null;
 }
@@ -189,27 +188,32 @@ export class CategoryService {
 
   async createCategory(data: unknown): Promise<Category> {
     const validated = categorySchema.parse(data);
-    const newCategory = {
-      ...validated,
-      id: crypto.randomUUID(),
-      attributes: validated.attributes === undefined ? null : validated.attributes, // Convert undefined to null
+    const insertData = {
+      name: validated.name,
+      parentId: validated.parentId ?? null,
+      attributes: validated.attributes ?? null,
     };
-    const created = await this.repo.create(newCategory);
+    const created = await this.repo.create(insertData);
     return this.mapToCategory(created);
   }
+
   async getCategoryById(id: string): Promise<Category | null> {
-    const cat = await this.repo.findById(id);
+    const numId = Number(id);
+    if (isNaN(numId)) {
+      return null; // Or throw Error('Invalid ID')
+    }
+    const cat = await this.repo.findById(numId);
     return cat ? this.mapToCategory(cat) : null;
   }
 
   async getAllCategories(): Promise<Category[]> {
     const cats = await this.repo.findAll();
-    return cats.map(this.mapToCategory);
+    return cats.map(this.mapToCategory.bind(this));
   }
 
   async getCategoryTree(): Promise<CategoryTree[]> {
     const allCats = await this.getAllCategories();
-    const catMap = new Map<string, CategoryTree>(
+    const catMap = new Map<number, CategoryTree>(
       allCats.map(cat => [cat.id, { ...cat, children: [] }])
     );
     
@@ -226,42 +230,49 @@ export class CategoryService {
   }
 
   async updateCategory(id: string, data: unknown): Promise<Category | null> {
-    const validated = updateCategorySchema.parse(data);
-    if (validated.parentId) {
-      await this.checkCycle(id, validated.parentId);
+    const numId = Number(id);
+    if (isNaN(numId)) {
+      return null; // Or throw Error('Invalid ID')
     }
-    const updated = await this.repo.update(id, validated);
+    const validated = updateCategorySchema.parse(data);
+    if (validated.parentId !== undefined && validated.parentId !== null) {
+      await this.checkCycle(numId, validated.parentId);
+    }
+    const updated = await this.repo.update(numId, validated);
     return updated ? this.mapToCategory(updated) : null;
   }
 
   async deleteCategory(id: string): Promise<void> {
-    const children = await this.repo.findChildren(id);
+    const numId = Number(id);
+    if (isNaN(numId)) {
+      throw new Error('Invalid ID');
+    }
+    const children = await this.repo.findChildren(numId);
     if (children.length > 0) {
       throw new Error('Cannot delete category with children');
     }
-    await this.repo.delete(id);
+    await this.repo.delete(numId);
   }
 
-  private async checkCycle(startId: string, newParentId: string | null): Promise<void> {
-    if (!newParentId) return; // No cycle if no parent
-    let current: string = newParentId; // Explicitly type as string
-    while (current) {
-      if (current === startId) {
-        throw new Error('Category hierarchy cycle detected');
-      }
-      const parentPath = await this.repo.findParentPath(current);
-      if (parentPath.includes(startId)) {
-        throw new Error('Category hierarchy cycle detected');
-      }
-      const cat = await this.repo.findById(current);
-      current = cat?.parentId ?? ''; // Use empty string as fallback
+  private async checkCycle(startId: number, newParentId: number): Promise<void> {
+    if (newParentId === startId) {
+      throw new Error('Cannot set category as its own parent');
+    }
+    const path = await this.repo.findParentPath(newParentId);
+    if (path.includes(startId)) {
+      throw new Error('Category hierarchy cycle detected');
     }
   }
+
   async addAttribute(id: string, key: string, value: any): Promise<Category | null> {
-    const cat = await this.repo.findById(id);
+    const numId = Number(id);
+    if (isNaN(numId)) {
+      return null; // Or throw Error('Invalid ID')
+    }
+    const cat = await this.repo.findById(numId);
     if (!cat) throw new Error('Category not found');
     const attributes = { ...(cat.attributes || {}), [key]: value };
-    const updated = await this.repo.update(id, { attributes });
+    const updated = await this.repo.update(numId, { attributes });
     return updated ? this.mapToCategory(updated) : null;
   }
 

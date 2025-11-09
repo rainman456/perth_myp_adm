@@ -40,7 +40,7 @@ export const deleteCategory = async (id: string) => {
 */
 // src/repositories/category_repository.ts
 import { drizzle } from 'drizzle-orm/neon-serverless'; // Adjust if needed
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc,isNull } from 'drizzle-orm';
 import { categories } from '../models/category';
 import { db } from '../config/database'; // Centralized DB
 
@@ -50,7 +50,7 @@ export class CategoryRepository {
     return newCat;
   }
 
-  async findById(id: string): Promise<typeof categories.$inferSelect | null> {
+  async findById(id: number): Promise<typeof categories.$inferSelect | null> {
     const [cat] = await db.select().from(categories).where(eq(categories.id, id));
     return cat || null;
   }
@@ -59,28 +59,33 @@ export class CategoryRepository {
     return db.select().from(categories).orderBy(desc(categories.createdAt));
   }
 
-  async findChildren(parentId: string): Promise<(typeof categories.$inferSelect)[]> {
+  async findChildren(parentId: number | null): Promise<(typeof categories.$inferSelect)[]> {
+    if (parentId === null) {
+      return db.select().from(categories).where(isNull(categories.parentId));
+    }
     return db.select().from(categories).where(eq(categories.parentId, parentId));
   }
-
-  async findParentPath(id: string): Promise<string[]> {
-    const path: string[] = [];
-    let current = id;
-    while (current) {
-      const [cat] = await db.select({ parentId: categories.parentId }).from(categories).where(eq(categories.id, current));
+  async findParentPath(id: number): Promise<number[]> {
+    const path: number[] = [];
+    let current: number | null = id;
+    while (current !== null) {
+      const [cat] = await db
+        .select({ parentId: categories.parentId })
+        .from(categories)
+        .where(eq(categories.id, current));
       if (!cat) break;
-      path.push(current);
-      current = cat.parentId || '';
+      path.push(current);  // Push the current ID (child to root)
+      current = cat.parentId ?? null;  // Handle null properly; no string coercion
     }
     return path;
   }
 
-  async update(id: string, data: Partial<typeof categories.$inferInsert>): Promise<typeof categories.$inferSelect | null> {
+  async update(id: number, data: Partial<typeof categories.$inferInsert>): Promise<typeof categories.$inferSelect | null> {
     const [updated] = await db.update(categories).set(data).where(eq(categories.id, id)).returning();
     return updated || null;
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(id: number): Promise<void> {
     await db.delete(categories).where(eq(categories.id, id));
   }
 }

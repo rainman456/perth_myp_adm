@@ -7,17 +7,16 @@
 //   parentId: varchar('parent_id'),
 //   createdAt: timestamp('created_at').defaultNow(),
 // });
-import { pgTable, varchar, text, timestamp, jsonb } from 'drizzle-orm/pg-core';
+import { pgTable, varchar, text, timestamp, jsonb, serial, bigint } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 export const categories = pgTable('categories', {
-  id: varchar('id').primaryKey(),
+  id: serial('id').primaryKey(),  // Auto-increment INT; use bigint('id', { mode: 'number' }).primaryKey().$defaultSeq() for BIGINT
   name: text('name').notNull(),
-  parentId: varchar('parent_id'),
-  attributes: jsonb('attributes'),  // Align with Go's map[string]any
-  createdAt: timestamp('created_at').defaultNow(),
+  parentId: bigint('parent_id', { mode: 'number' }),  // Nullable integer; matches GORM's *uint
+  attributes: jsonb('attributes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),  // Ensure notNull if GORM enforces it
 });
-
 // Add relations for hierarchy
 export const categoryRelations = relations(categories, ({ one }) => ({
   parent: one(categories, {
