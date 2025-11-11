@@ -1,6 +1,6 @@
 // src/models/index.ts
 export * from './merchant.js'; // Exports { merchants }
-export * from './merchant_applications.js'; // Exports { merchantApplication }
+//export * from './merchant_applications.js'; // Exports { merchantApplication }
 export * from './admins.js'; // Exports { adminLogs, admins }
 export * from './payout.js'; // Exports { payouts }
 export * from './dispute.js'; // Exports { disputes }

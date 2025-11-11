@@ -81,16 +81,16 @@ async function seed() {
 
 */
 }
-console.log('Seeding admins...');
-const adminPassword = await bcrypt.hash('adminpass', 10);
-await db.insert(admins).values({
-  id: uuid(), // Generates UUID
-  username: 'adminrt',
-  password: adminPassword,
-  role: 'admin',
-  email: 'admin1@mail.com',
-  createdAt: new Date(),
-});
+// console.log('Seeding admins...');
+// const adminPassword = await bcrypt.hash('adminpass', 10);
+// await db.insert(admins).values({
+//   id: uuid(), // Generates UUID
+//   username: 'adminrt',
+//   password: adminPassword,
+//   role: 'admin',
+//   email: 'admin1@mail.com',
+//   createdAt: new Date(),
+// });
 
 seed().catch((err) => {
   console.error('Seeding failed:', err);
