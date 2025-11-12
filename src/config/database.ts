@@ -19,16 +19,16 @@ export const db = drizzle(sql);
 // //import { drizzle } from 'drizzle-orm/neon-http';
 // import { drizzle } from "drizzle-orm/neon-serverless"; // Use neon-serverless instead of neon-http
 // import { Pool } from "@neondatabase/serverless";
-// import { merchants } from "../models/merchant.js";
-// import { merchantApplication } from "../models/merchant_applications.js";
-// import { adminLogs, admins } from "../models/admins.js";
-// import { payouts } from "../models/payout.js";
-// import { disputes } from "../models/dispute.js";
-// import { returnRequests } from "../models/return_request.js";
-// import { settings } from "../models/settings.js";
-// import { users } from "../models/users.js";
-// import { orderMerchantSplits } from "../models/order_merchant_split.js";
-// import { merchantBankDetails } from "../models/bank_details.js";
+// import { merchants } from "../models/merchant";
+// import { merchantApplication } from "../models/merchant_applications";
+// import { adminLogs, admins } from "../models/admins";
+// import { payouts } from "../models/payout";
+// import { disputes } from "../models/dispute";
+// import { returnRequests } from "../models/return_request";
+// import { settings } from "../models/settings";
+// import { users } from "../models/users";
+// import { orderMerchantSplits } from "../models/order_merchant_split";
+// import { merchantBankDetails } from "../models/bank_details";
 
 // // Ensure DATABASE_URL is set in environment variables
 // if (!process.env.DATABASE_URL) {

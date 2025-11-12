@@ -8,7 +8,7 @@ import {
   payoutFailedTemplate,
   merchantSuspendedTemplate,
   weeklyPayoutSummaryTemplate,
-} from "./email-templates.js";
+} from "./email-templates";
 
 // Email configuration - optional in development
 const emailEnabled = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);

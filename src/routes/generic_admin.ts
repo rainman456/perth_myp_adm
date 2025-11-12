@@ -7,9 +7,9 @@ import {
   update,
   del,
   bulkDelete,
-} from "../controllers/generic_resource.js";
-import { requireAdmin, requireRole } from "../middleware/auth.js";
-import { AdminRole } from "../types/roles.js";
+} from "../controllers/generic_resource";
+import { requireAdmin, requireRole } from "../middleware/auth";
+import { AdminRole } from "../types/roles";
 
 const router = Router({ mergeParams: true }); // For {model} param
 

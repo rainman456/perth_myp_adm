@@ -64,16 +64,16 @@ import express from "express";
 // import connectRedis from "connect-redis";
 // import { createClient } from "redis";
 //import { Pool } from "@neondatabase/serverless";
-import { registerRoutes } from "./routes/index.js";
-//import { loggingMiddleware } from "./middleware/logging.js";
-import { config as appConfig } from "./config/index.js";
+import { registerRoutes } from "./routes/index";
+//import { loggingMiddleware } from "./middleware/logging";
+import { config as appConfig } from "./config/index";
 import swaggerUi from "swagger-ui-express";
-import { specs } from "./docs/swagger.js";
-// import { adminRouter } from "./admin/admin.js"; // Commented out - module doesn't exist
+import { specs } from "./docs/swagger";
+// import { adminRouter } from "./admin/admin"; // Commented out - module doesn't exist
 import expressWinston from "express-winston";
-import { logger } from "./utils/logger.js";
-import webhookRouter from "./routes/webhook.js"
-import { startPayoutSchedulers } from "./jobs/payout-scheduler.js"
+import { logger } from "./utils/logger";
+import webhookRouter from "./routes/webhook"
+import { startPayoutSchedulers } from "./jobs/payout-scheduler"
 // import "dotenv/config";  // <-- loads .env before any other module
 
 // import express from "express"

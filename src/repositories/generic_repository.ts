@@ -1,9 +1,9 @@
-import { db } from "../config/database.js";
+import { db } from "../config/database";
 import { eq, like, and, SQL, inArray, isNull, or, sql } from "drizzle-orm";
 import { AnyPgTable, PgTable } from "drizzle-orm/pg-core";
 
 // Import all models at once
-import * as modelsModule from "../models/index.js";
+import * as modelsModule from "../models/index";
 
 // Type-safe model map
 type ModelKey = keyof typeof modelsModule;

@@ -1,8 +1,8 @@
 // ============ GENERIC RESOURCE SERVICE ============
 // src/services/generic_resource_service.ts
 
-import * as genericRepo from "../repositories/generic_repository.js";
-import { hasPermission, Permission, AdminRole } from "../types/roles.js";
+import * as genericRepo from "../repositories/generic_repository";
+import { hasPermission, Permission, AdminRole } from "../types/roles";
 import { z } from "zod";
 
 /**
@@ -144,9 +144,9 @@ const checkPermission = (
  * Models that require specific service handlers
  */
 const specificServices = {
-  merchants: () => import("../services/merchant_service.js"),
-  categories: () => import("../services/category_service.js"),
- // products: () => import("../services/product_service.js"),
+  merchants: () => import("../services/merchant_service"),
+  categories: () => import("../services/category_service"),
+ // products: () => import("../services/product_service"),
   // Add other specific services as needed
 };
 

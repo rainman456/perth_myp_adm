@@ -1,8 +1,8 @@
-import * as repo from "../repositories/bank_details_repository.js";
-import { createTransferRecipient ,resolveAccountNumber} from "./paystack_service.js";
+import * as repo from "../repositories/bank_details_repository";
+import { createTransferRecipient ,resolveAccountNumber} from "./paystack_service";
 import type { InferSelectModel } from "drizzle-orm";
-import { merchantBankDetails } from "../models/bank_details.js";
-import { logger } from "../utils/logger.js";
+import { merchantBankDetails } from "../models/bank_details";
+import { logger } from "../utils/logger";
 import { z } from "zod";
 
 type MerchantBankDetails = InferSelectModel<typeof merchantBankDetails>;

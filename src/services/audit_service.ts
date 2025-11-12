@@ -1,7 +1,7 @@
-import { db } from "../config/database.js";
-import { adminLogs } from "../models/admins.js";
+import { db } from "../config/database";
+import { adminLogs } from "../models/admins";
 import { v4 as uuid } from "uuid";
-import { logger } from "../utils/logger.js";
+import { logger } from "../utils/logger";
 
 export interface AdminLogEntry {
   adminId: string;

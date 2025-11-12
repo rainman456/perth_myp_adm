@@ -1,10 +1,10 @@
 /*
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { db } from "../config/database.js";
-import { admins } from "../models/admins.js";
+import { db } from "../config/database";
+import { admins } from "../models/admins";
 import { eq } from "drizzle-orm";
-import { config } from "../config/index.js";
+import { config } from "../config/index";
 //import { AdminRole } from "@/types/roles.js";
 import { AdminRole, hasPermission } from "../types/roles"; // Add this import
 
@@ -65,11 +65,11 @@ export const requireAdmin = async (
 */
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { db } from "../config/database.js";
-import { admins } from "../models/admins.js";
+import { db } from "../config/database";
+import { admins } from "../models/admins";
 import { eq } from "drizzle-orm";
-import { config } from "../config/index.js";
-import { AdminRole } from "../types/roles.js";  // Ensure import
+import { config } from "../config/index";
+import { AdminRole } from "../types/roles";  // Ensure import
 
 export const requireRole = (requiredRole: AdminRole) => 
   (req: Request, res: Response, next: NextFunction) => {

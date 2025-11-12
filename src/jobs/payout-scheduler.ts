@@ -1,10 +1,10 @@
 // Automatic payout scheduler using node-cron
 
 import cron from "node-cron"
-import { aggregateEligiblePayouts, processPayout } from "../services/payout_service.js"
-import { logger } from "../utils/logger.js"
-import { db } from "../config/database.js"
-import { payouts } from "../models/payout.js"
+import { aggregateEligiblePayouts, processPayout } from "../services/payout_service"
+import { logger } from "../utils/logger"
+import { db } from "../config/database"
+import { payouts } from "../models/payout"
 import { eq } from "drizzle-orm"
 
 // Run payout aggregation daily at 2 AM

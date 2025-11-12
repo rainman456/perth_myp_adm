@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import * as payoutService from "../services/payout_service.js";
+import * as payoutService from "../services/payout_service";
 
 export const getAllPayouts = async (req: Request, res: Response) => {
   try {

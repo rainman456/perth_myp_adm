@@ -1,13 +1,13 @@
-import { db } from "../config/database.js";
-import { returnRequests } from "../models/return_request.js";
-import { orderItems } from "../models/order_item.js";
-import { orders } from "../models/order.js";
-import { inventories } from "../models/inventory.js";
+import { db } from "../config/database";
+import { returnRequests } from "../models/return_request";
+import { orderItems } from "../models/order_item";
+import { orders } from "../models/order";
+import { inventories } from "../models/inventory";
 import { eq, and } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
-import * as paystackService from "./paystack_service.js";
-import * as auditService from "./audit_service.js";
-import { logger } from "../utils/logger.js";
+import * as paystackService from "./paystack_service";
+import * as auditService from "./audit_service";
+import { logger } from "../utils/logger";
 
 export interface CreateReturnRequest {
   orderItemId: string;

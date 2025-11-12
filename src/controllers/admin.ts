@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import * as adminService from "../services/admin_service.js";
-import { AdminRole } from "../types/roles.js";
+import * as adminService from "../services/admin_service";
+import { AdminRole } from "../types/roles";
 
 /**
  * @swagger

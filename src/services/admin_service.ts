@@ -1,11 +1,11 @@
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
-import { db } from "../config/database.js"
-import { admins } from "../models/admins.js"
+import { db } from "../config/database"
+import { admins } from "../models/admins"
 import { eq } from "drizzle-orm"
-import { config } from "../config/index.js"
+import { config } from "../config/index"
 import type { SignOptions } from "jsonwebtoken"
-import type { AdminRole } from "../types/roles.js"
+import type { AdminRole } from "../types/roles"
 
 interface AdminLoginPayload {
   id: string

@@ -1,15 +1,15 @@
 import { eq, and, lt } from "drizzle-orm";
-import { db } from "../config/database.js";
-import { payouts } from "../models/payout.js";
-import { orderMerchantSplits } from "../models/order_merchant_split.js";
-import { merchants } from "../models/merchant.js";
-import { logger } from "../utils/logger.js";
+import { db } from "../config/database";
+import { payouts } from "../models/payout";
+import { orderMerchantSplits } from "../models/order_merchant_split";
+import { merchants } from "../models/merchant";
+import { logger } from "../utils/logger";
 import {
   sendPayoutNotificationEmail,
   sendPayoutFailedEmail,
-} from "../utils/email.js";
-import { initiateTransfer, verifyTransfer } from "./paystack_service.js";
-import { merchantBankDetails } from "../models/bank_details.js";
+} from "../utils/email";
+import { initiateTransfer, verifyTransfer } from "./paystack_service";
+import { merchantBankDetails } from "../models/bank_details";
 
 export const aggregateEligiblePayouts = async () => {
   logger.info("Starting automatic payout aggregation...");

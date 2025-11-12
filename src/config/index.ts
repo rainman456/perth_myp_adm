@@ -36,9 +36,10 @@ export const config = {
     enabled: !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS),
   },
   paystack: {
-    secretKey: process.env.PAYSTACK_SECRET_KEY || "",
-    webhookSecret: process.env.PAYSTACK_WEBHOOK_SECRET || process.env.PAYSTACK_SECRET_KEY || "",
+    secretKey: process.env.PAYSTACK_SECRET_KEY || "sk_test_7533ccc102ff26e5b1246041b455162bbea0c876",
+    webhookSecret: process.env.PAYSTACK_WEBHOOK_SECRET || process.env.PAYSTACK_SECRET_KEY || "sk_test_7533ccc102ff26e5b1246041b455162bbea0c876",
     enabled: !!process.env.PAYSTACK_SECRET_KEY,
   },
-  merchantApiWebhookUrl: process.env.MERCHANT_API_WEBHOOK_URL || "https://merchant-api.example.com/webhooks/paystack",
+  //merchantApiWebhookUrl: process.env.MERCHANT_API_WEBHOOK_URL || "http://localhost:8000/payments/webhook",
+  merchantApiWebhookUrl: process.env.MERCHANT_API_WEBHOOK_URL || "https://perthmyp-9flfu.sevalla.app/payments/webhook",
 };

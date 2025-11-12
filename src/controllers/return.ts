@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import * as returnService from "../services/return_service.js";
+import * as returnService from "../services/return_service";
 
 // Create return request (customer)
 export const createReturn = async (req: Request, res: Response) => {

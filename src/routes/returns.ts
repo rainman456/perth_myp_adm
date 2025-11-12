@@ -1,8 +1,8 @@
 import { Router } from "express";
-import * as returnController from "../controllers/return.js";
-import { requireAdmin } from "../middleware/auth.js";
-import { requirePermission } from "../middleware/rbac.js";
-import { Permission } from "../types/roles.js";
+import * as returnController from "../controllers/return";
+import { requireAdmin } from "../middleware/auth";
+import { requirePermission } from "../middleware/rbac";
+import { Permission } from "../types/roles";
 
 const router = Router();
 

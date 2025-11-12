@@ -1,7 +1,7 @@
 // Role-based access control middleware
 
 import type { Request, Response, NextFunction } from "express";
-import { type Permission, hasPermission, AdminRole } from "../types/roles.js";
+import { type Permission, hasPermission, AdminRole } from "../types/roles";
 
 // Note: Express Request type is extended in src/types/express.d.ts
 // No need to redeclare it here to avoid conflicts

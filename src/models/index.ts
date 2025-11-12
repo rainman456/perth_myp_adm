@@ -1,21 +1,21 @@
 // src/models/index.ts
-export * from './merchant.js'; // Exports { merchants }
-//export * from './merchant_applications.js'; // Exports { merchantApplication }
-export * from './admins.js'; // Exports { adminLogs, admins }
-export * from './payout.js'; // Exports { payouts }
-export * from './dispute.js'; // Exports { disputes }
-export * from './return_request.js'; // Exports { returnRequests }
-export * from './settings.js'; // Exports { settings }
-export * from './users.js'; // Exports { users }
-export * from './order_merchant_split.js'; // Exports { orderMerchantSplits }
-export * from './bank_details.js'; // Exports { merchantBankDetails }
-export * from './category.js'
-export * from './inventory.js'
-export * from './order.js'
-export * from './variant.js'
+export * from './merchant'; // Exports { merchants }
+//export * from './merchant_applications'; // Exports { merchantApplication }
+export * from './admins'; // Exports { adminLogs, admins }
+export * from './payout'; // Exports { payouts }
+export * from './dispute'; // Exports { disputes }
+export * from './return_request'; // Exports { returnRequests }
+export * from './settings'; // Exports { settings }
+export * from './users'; // Exports { users }
+export * from './order_merchant_split'; // Exports { orderMerchantSplits }
+export * from './bank_details'; // Exports { merchantBankDetails }
+export * from './category'
+export * from './inventory'
+export * from './order'
+export * from './variant'
 
 
 
 // If you have more models (e.g., from your generic_repository.ts), add them here:
-// export * from './products.js'; // Exports { products }
+// export * from './products'; // Exports { products }
 // etc.

@@ -121,7 +121,7 @@ import { validate as uuidValidate } from "uuid";
 import { admins } from "../models/admins";
 import { config } from "../config";
 import { merchantBankDetails } from "../models/bank_details";
-import * as paystackService from "./paystack_service.js";
+import * as paystackService from "./paystack_service";
 
 interface MerchantService {
   getAllMerchants?: (filters?: Record<string, any>) => Promise<any>;

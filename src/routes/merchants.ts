@@ -16,7 +16,7 @@ router.put('/:id/commission', controller.updateCommissionTier);
 export default router;
 */
 import { Router } from "express";
-import * as controller from "../controllers/merchant.js"; // Fixed: merchant.ts
+import * as controller from "../controllers/merchant"; // Fixed: merchant.ts
 //import { authMiddleware } from "../middleware/auth";
 
 const router = Router();

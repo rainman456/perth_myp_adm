@@ -1,5 +1,5 @@
-import { db } from "../config/database.js";
-import { merchantBankDetails } from "../models/bank_details.js";
+import { db } from "../config/database";
+import { merchantBankDetails } from "../models/bank_details";
 import { eq } from "drizzle-orm";
 import type { InferSelectModel } from "drizzle-orm";
 

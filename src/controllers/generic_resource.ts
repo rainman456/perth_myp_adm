@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import * as genericService from "../services/generic_resource_service.js";
-import { logger } from "../utils/logger.js";
+import * as genericService from "../services/generic_resource_service";
+import { logger } from "../utils/logger";
 
 // Async handler wrapper to simplify error handling
 const asyncHandler =

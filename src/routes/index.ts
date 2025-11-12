@@ -45,16 +45,16 @@ export function registerRoutes(app: Express) {  // Removed 'async' (no awaits in
 }
 */
 import type { Express } from "express";
-import adminRoutes from "./admin.js";
-import categoryRoutes from "./category.js";
-import merchantRoutes from "./merchants.js";
-import settingsRoutes from "./settings.js";
-import returnRoutes from "./returns.js";
+import adminRoutes from "./admin";
+import categoryRoutes from "./category";
+import merchantRoutes from "./merchants";
+import settingsRoutes from "./settings";
+import returnRoutes from "./returns";
 //import authRoutes from "./auth"
-import { requireAdmin } from "../middleware/auth.js";
-import genericAdminRouter from "./generic_admin.js";
-//import { loggingMiddleware } from "../middleware/logging.js"
-//import { stripeWebhook } from "../utils/external.js"
+import { requireAdmin } from "../middleware/auth";
+import genericAdminRouter from "./generic_admin";
+//import { loggingMiddleware } from "../middleware/logging"
+//import { stripeWebhook } from "../utils/external"
 
 export function registerRoutes(app: Express) {
   //app.use(loggingMiddleware)
