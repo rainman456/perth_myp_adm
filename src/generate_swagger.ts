@@ -1,24 +1,23 @@
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import swaggerJsdoc from 'swagger-jsdoc';
-/*
-// Polyfill __dirname for ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+
+
+// If compiled to CommonJS, Node supplies __filename/__dirname
+// If for some reason __dirname isn't available, fall back to process.cwd()
+const _dirname = (typeof __dirname !== 'undefined') ? __dirname : path.join(process.cwd(), 'src');
 
 // Import your TS definition
-import { specs } from './src/docs/swagger.ts';
+import { specs } from './docs/swagger';
 
 try {
-  const openapiSpec = swaggerJsdoc(specs);
+  const openapiSpec: any = swaggerJsdoc(specs);
 
   if (!openapiSpec.paths || Object.keys(openapiSpec.paths).length === 0) {
     console.warn('Warning: No API paths found. Check your @swagger annotations in the scanned files.');
   }
 
-  // Write to swagger.json
-  const jsonPath = path.join(__dirname, 'swagger.json');
+  const jsonPath = path.join(_dirname, 'swagger.json');
   fs.writeFileSync(jsonPath, JSON.stringify(openapiSpec, null, 2), 'utf8');
 
   console.log(`Swagger JSON generated at: ${jsonPath}`);
@@ -27,5 +26,3 @@ try {
   console.error('Error generating Swagger JSON:', error);
   process.exit(1);
 }
-
-*/

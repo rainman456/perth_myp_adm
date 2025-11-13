@@ -1,6 +1,6 @@
-import swaggerJsdoc from 'swagger-jsdoc';
+import type { Options } from 'swagger-jsdoc';
 
-const options = {
+export const specs: Options = {
   definition: {
     openapi: '3.0.0',
     info: {
@@ -18,17 +18,15 @@ const options = {
       securitySchemes: {
         AdminAuth: {
           type: 'http',
-          scheme: 'Admin',
+          scheme: 'bearer',
           bearerFormat: 'JWT',
         },
       },
     },
-    security: [{ AdminAuth: [] }],  // Global auth for protected routes
+    security: [{ AdminAuth: [] }],
   },
-  apis: ['./src/routes/*.ts', './src/controllers/*.ts'],  // Scan for JSDoc
+  apis: ['./src/routes/**/*.ts', './src/controllers/**/*.ts','./src/models/*.ts'], 
 };
-
-export const specs = swaggerJsdoc(options);
 
 
 
