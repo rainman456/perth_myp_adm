@@ -68,7 +68,8 @@ import { registerRoutes } from "./routes/index";
 //import { loggingMiddleware } from "./middleware/logging";
 import { config as appConfig } from "./config/index";
 import swaggerUi from "swagger-ui-express";
-import { specs } from "./docs/swagger";
+import swaggerJsdoc from 'swagger-jsdoc';
+import { specsOptions } from "./docs/swagger";
 // import { adminRouter } from "./admin/admin"; // Commented out - module doesn't exist
 import expressWinston from "express-winston";
 import { logger } from "./utils/logger";
@@ -117,7 +118,14 @@ app.use((req, res, next) => {
   next();
 });
 app.use(express.json());
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
+const swaggerSpec = swaggerJsdoc(specsOptions);
+
+// debug: confirm openapi present
+//console.log('Swagger spec keys:', Object.keys(swaggerSpec));
+//console.log('openapi field:', swaggerSpec?.openapi);
+
+// mount swagger UI with the generated spec (NOT the options object)
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 //app.use(express.raw({ type: "application/webhook+json" }))
 //app.use(loggingMiddleware)
 

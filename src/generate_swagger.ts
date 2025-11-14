@@ -8,10 +8,10 @@ import swaggerJsdoc from 'swagger-jsdoc';
 const _dirname = (typeof __dirname !== 'undefined') ? __dirname : path.join(process.cwd(), 'src');
 
 // Import your TS definition
-import { specs } from './docs/swagger';
+import { specsOptions } from './docs/swagger';
 
 try {
-  const openapiSpec: any = swaggerJsdoc(specs);
+  const openapiSpec: any = swaggerJsdoc(specsOptions);
 
   if (!openapiSpec.paths || Object.keys(openapiSpec.paths).length === 0) {
     console.warn('Warning: No API paths found. Check your @swagger annotations in the scanned files.');

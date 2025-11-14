@@ -4,7 +4,7 @@ import { AdminRole } from "../types/roles";
 
 /**
  * @swagger
- * /adminv/login:
+ * /admin/login:
  *   post:
  *     summary: Admin sign-in
  *     tags: [Admin]

@@ -1,32 +1,32 @@
-import type { Options } from 'swagger-jsdoc';
+// import type { Options } from 'swagger-jsdoc';
 
-export const specs: Options = {
-  definition: {
-    openapi: '3.1.0',
-    info: {
-      title: 'Admin API',
-      version: '1.0.0',
-      description: 'API for ARONOVA',
-    },
-    servers: [
-      {
-        url: `http://localhost:${process.env.PORT || 8080}/api`,
-        description: 'Development server',
-      },
-    ],
-    components: {
-      securitySchemes: {
-        AdminAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-        },
-      },
-    },
-    security: [{ AdminAuth: [] }],
-  },
-  apis: ['./src/routes/**/*.ts', './src/controllers/**/*.ts','./src/models/*.ts'], 
-};
+// export const specs: Options = {
+//   definition: {
+//     openapi: '3.1.0',
+//     info: {
+//       title: 'Admin API',
+//       version: '1.0.0',
+//       description: 'API for ARONOVA',
+//     },
+//     servers: [
+//       {
+//         url: `http://localhost:${process.env.PORT || 8080}/api`,
+//         description: 'Development server',
+//       },
+//     ],
+//     components: {
+//       securitySchemes: {
+//         AdminAuth: {
+//           type: 'http',
+//           scheme: 'bearer',
+//           bearerFormat: 'JWT',
+//         },
+//       },
+//     },
+//     security: [{ AdminAuth: [] }],
+//   },
+//   apis: ['./src/routes/**/*.ts', './src/controllers/**/*.ts','./src/models/*.ts'], 
+// };
 
 
 
@@ -75,3 +75,36 @@ export const specs: Options = {
 //   ],
 // };
 
+
+
+// src/docs/swagger.ts
+import type { Options } from 'swagger-jsdoc';
+
+export const specsOptions: Options = {
+  definition: {
+    openapi: '3.0.0', // 3.0.0 is safe for most swagger-ui versions
+    info: {
+      title: 'Admin API',
+      version: '1.0.0',
+      description: 'API for ARONOVA',
+    },
+    servers: [
+      {
+        url: `http://localhost:${process.env.PORT || 8080}/api`,
+        description: 'Development server',
+      },
+    ],
+    components: {
+      securitySchemes: {
+        AdminAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+    },
+    security: [{ AdminAuth: [] }],
+  },
+  // When running compiled JS, change this to './dist/**/*.js'
+  apis: ['./src/routes/**/*.ts', './src/controllers/**/*.ts', './src/models/**/*.ts'],
+};
