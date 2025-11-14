@@ -40,6 +40,40 @@ export const getApplications = async (req: Request, res: Response) => {
 
 
 
+/**
+ * @swagger
+ * /merchants/applications/pending:
+ *   get:
+ *     summary: Get pending merchant applications
+ *     tags: [Merchants]
+ *     security:
+ *       - AdminAuth: []
+ *     responses:
+ *       200:
+ *         description: List of pending applications
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                     format: uuid
+ *                   storeName:
+ *                     type: string
+ *                   businessEmail:
+ *                     type: string
+ *                   status:
+ *                     type: string
+ *                     example: pending
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
+ *       500:
+ *         description: Server error
+ */
 export const getPendingApplications = async (req: Request, res: Response) => {
   try {
     const applications = await merchantService.getPendingApplications()
@@ -378,6 +412,49 @@ export const requestMoreInfo = async (req: Request, res: Response) => {
 
 
 
+/**
+ * @swagger
+ * /merchants:
+ *   get:
+ *     summary: Get all merchants
+ *     tags: [Merchants]
+ *     security:
+ *       - AdminAuth: []
+ *     responses:
+ *       200:
+ *         description: List of merchants
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                     format: uuid
+ *                   merchantId:
+ *                     type: string
+ *                     format: uuid
+ *                   storeName:
+ *                     type: string
+ *                   businessEmail:
+ *                     type: string
+ *                   status:
+ *                     type: string
+ *                     enum: [active, suspended, inactive]
+ *                   commissionTier:
+ *                     type: string
+ *                     enum: [standard, premium]
+ *                   commissionRate:
+ *                     type: number
+ *                     format: float
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
+ *       500:
+ *         description: Server error
+ */
 export const getMerchants = async (req: Request, res: Response) => {
   try {
     const merchants = await merchantService.getAllMerchants()

@@ -28,10 +28,9 @@ const service = new CategoryService();
  *                 type: string
  *                 example: Electronics
  *               parentId:
- *                 type: string
- *                 format: uuid
+ *                 type: integer
  *                 nullable: true
- *                 example: null
+ *                 example: 1
  *               attributes:
  *                 type: object
  *                 example: { "color": "string", "size": "string" }
@@ -46,17 +45,15 @@ const service = new CategoryService();
  *               type: object
  *               properties:
  *                 id:
- *                   type: string
- *                   format: uuid
- *                   example: 123e4567-e89b-12d3-a456-426614174000
+ *                   type: integer
+ *                   example: 1
  *                 name:
  *                   type: string
  *                   example: Electronics
  *                 parentId:
- *                   type: string
- *                   format: uuid
+ *                   type: integer
  *                   nullable: true
- *                   example: null
+ *                   example: 1
  *                 attributes:
  *                   type: object
  *                   example: { "color": "string", "size": "string" }
@@ -110,8 +107,7 @@ export const createCategory = async (req: Request, res: Response) => {
  *         name: id
  *         required: true
  *         schema:
- *           type: string
- *           format: uuid
+ *           type: integer
  *         description: Category ID
  *     responses:
  *       204:
@@ -170,17 +166,15 @@ export const getCategoryById = async (req: Request, res: Response) => {
  *                 type: object
  *                 properties:
  *                   id:
- *                     type: string
- *                     format: uuid
- *                     example: 123e4567-e89b-12d3-a456-426614174000
+ *                     type: integer
+ *                     example: 1
  *                   name:
  *                     type: string
  *                     example: Electronics
  *                   parentId:
- *                     type: string
- *                     format: uuid
+ *                     type: integer
  *                     nullable: true
- *                     example: null
+ *                     example: 1
  *                   attributes:
  *                     type: object
  *                     example: { "color": "string", "size": "string" }
@@ -245,8 +239,7 @@ export const getCategoryTree = async (req: Request, res: Response) => {
  *         name: id
  *         required: true
  *         schema:
- *           type: string
- *           format: uuid
+ *           type: integer
  *         description: Category ID
  *     requestBody:
  *       required: true
@@ -259,10 +252,9 @@ export const getCategoryTree = async (req: Request, res: Response) => {
  *                 type: string
  *                 example: Updated Electronics
  *               parentId:
- *                 type: string
- *                 format: uuid
+ *                 type: integer
  *                 nullable: true
- *                 example: null
+ *                 example: 1
  *               attributes:
  *                 type: object
  *                 example: { "color": "string", "size": "string" }
@@ -275,17 +267,15 @@ export const getCategoryTree = async (req: Request, res: Response) => {
  *               type: object
  *               properties:
  *                 id:
- *                   type: string
- *                   format: uuid
- *                   example: 123e4567-e89b-12d3-a456-426614174000
+ *                   type: integer
+ *                   example: 1
  *                 name:
  *                   type: string
  *                   example: Updated Electronics
  *                 parentId:
- *                   type: string
- *                   format: uuid
+ *                   type: integer
  *                   nullable: true
- *                   example: null
+ *                   example: 1
  *                 attributes:
  *                   type: object
  *                   example: { "color": "string", "size": "string" }

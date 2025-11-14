@@ -24,6 +24,27 @@ import { AdminRole } from "../types/roles";
  *     responses:
  *       200:
  *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                     username:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *       400:
+ *         description: Email and password are required
  *       401:
  *         description: Invalid credentials
  */
@@ -41,6 +62,40 @@ export const adminSignIn = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * @swagger
+ * /admin:
+ *   get:
+ *     summary: Get all admins
+ *     tags: [Admin]
+ *     security:
+ *       - AdminAuth: []
+ *     responses:
+ *       200:
+ *         description: List of admins
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 admins:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         format: uuid
+ *                       username:
+ *                         type: string
+ *                       email:
+ *                         type: string
+ *                       role:
+ *                         type: string
+ *                         enum: [superadmin, admin, support]
+ *       500:
+ *         description: Server error
+ */
 export const getAllAdmins = async (req: Request, res: Response) => {
   try {
     const admins = await adminService.getAllAdmins();
@@ -50,6 +105,65 @@ export const getAllAdmins = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * @swagger
+ * /admin:
+ *   post:
+ *     summary: Create a new admin
+ *     tags: [Admin]
+ *     security:
+ *       - AdminAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 example: johndoe
+ *               email:
+ *                 type: string
+ *                 example: admin@example.com
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 example: securepassword123
+ *               role:
+ *                 type: string
+ *                 enum: [superadmin, admin, support]
+ *                 example: admin
+ *             required:
+ *               - username
+ *               - email
+ *               - password
+ *               - role
+ *     responses:
+ *       201:
+ *         description: Admin created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 admin:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                     username:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
+ */
 export const createAdmin = async (req: Request, res: Response) => {
   try {
     const { username, email, password, role } = req.body;
@@ -76,6 +190,60 @@ export const createAdmin = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * @swagger
+ * /admin/{id}/role:
+ *   patch:
+ *     summary: Update admin role
+ *     tags: [Admin]
+ *     security:
+ *       - AdminAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Admin ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               role:
+ *                 type: string
+ *                 enum: [superadmin, admin, support]
+ *                 example: admin
+ *             required:
+ *               - role
+ *     responses:
+ *       200:
+ *         description: Admin role updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 admin:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                     username:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
+ */
 export const updateAdminRole = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
