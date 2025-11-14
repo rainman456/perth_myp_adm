@@ -10,7 +10,7 @@ export const specs: Options = {
     },
     servers: [
       {
-        url: `http://localhost:${process.env.PORT || 8080}/`,
+        url: `http://localhost:${process.env.PORT || 8080}/api`,
         description: 'Development server',
       },
     ],
