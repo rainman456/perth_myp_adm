@@ -2,7 +2,7 @@ import type { Options } from 'swagger-jsdoc';
 
 export const specs: Options = {
   definition: {
-    openapi: '3.0.0',
+    openapi: '3.1.0',
     info: {
       title: 'Admin API',
       version: '1.0.0',
@@ -10,7 +10,7 @@ export const specs: Options = {
     },
     servers: [
       {
-        url: `http://localhost:${process.env.PORT || 8080}`,
+        url: `http://localhost:${process.env.PORT || 8080}/`,
         description: 'Development server',
       },
     ],

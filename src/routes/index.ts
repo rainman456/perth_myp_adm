@@ -60,7 +60,7 @@ export function registerRoutes(app: Express) {
   //app.use(loggingMiddleware)
 
   //app.use("/api/auth", authRoutes)
-  app.use("/adminv", adminRoutes);
+  app.use("/admin", adminRoutes);
   app.use("/api/categories", requireAdmin, categoryRoutes);
   app.use("/api/merchants", requireAdmin, merchantRoutes);
   app.use("/api/settings", requireAdmin, settingsRoutes);
@@ -83,33 +83,33 @@ export function registerRoutes(app: Express) {
       version: "1.0.0",
       endpoints: {
         auth: {
-          "POST /api/auth/login": "Admin login",
-          "POST /api/auth/admin": "Create admin user",
+          "POST /api/login": "Admin login",
+          "POST /api/admin": "Create admin user",
           "GET /api/auth/profile": "Get admin profile (requires auth)",
         },
         merchants: {
-          "GET /api/admin/merchants/applications": "Get all applications",
-          "GET /api/admin/merchants/applications/pending":
+          "GET /api/merchants/applications": "Get all applications",
+          "GET /api/merchants/applications/pending":
             "Get pending applications",
-          "POST /api/admin/merchants/applications/:id/approve":
+          "POST /api/merchants/applications/:id/approve":
             "Approve application",
-          "POST /api/admin/merchants/applications/:id/reject":
+          "POST /api/merchants/applications/:id/reject":
             "Reject application",
-          "POST /api/admin/merchants/applications/:id/more-info":
+          "POST /api/merchants/applications/:id/more-info":
             "Request more info",
-          "GET /api/admin/merchants": "Get all merchants",
-          "POST /api/admin/merchants/:id/suspend": "Suspend merchant",
-          "PUT /api/admin/merchants/:id/commission": "Update commission tier",
+          "GET /api/merchants": "Get all merchants",
+          "POST /api/merchants/:id/suspend": "Suspend merchant",
+          "PUT /api/merchants/:id/commission": "Update commission tier",
         },
         categories: {
-          "GET /api/admin/categories": "Get all categories",
-          "POST /api/admin/categories": "Create category",
-          "PUT /api/admin/categories/:id": "Update category",
-          "DELETE /api/admin/categories/:id": "Delete category",
+          "GET /api/categories": "Get all categories",
+          "POST /api/categories": "Create category",
+          "PUT /api/categories/:id": "Update category",
+          "DELETE /api/categories/:id": "Delete category",
         },
         settings: {
-          "GET /api/admin/settings": "Get settings",
-          "PUT /api/admin/settings": "Update settings",
+          "GET /api/settings": "Get settings",
+          "PUT /api/settings": "Update settings",
         },
         // webhooks: {
         //   "POST /api/webhooks/stripe": "Stripe webhook handler",
