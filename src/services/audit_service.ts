@@ -6,7 +6,7 @@ import { logger } from "../utils/logger";
 export interface AdminLogEntry {
   adminId: string;
   action: string;
-  targetType: "merchant" | "application" | "dispute" | "return" | "payout" | "order" | "refund";
+  targetType: "merchant" | "application" | "dispute" | "return" | "payout" | "order" | "refund"| "settings";
   targetId: string;
   details?: Record<string, any>;
   ipAddress?: string;
