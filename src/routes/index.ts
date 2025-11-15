@@ -50,6 +50,7 @@ import categoryRoutes from "./category";
 import merchantRoutes from "./merchants";
 import settingsRoutes from "./settings";
 import returnRoutes from "./returns";
+import  payoutRoutes from "./payout"
 //import authRoutes from "./auth"
 import { requireAdmin } from "../middleware/auth";
 import genericAdminRouter from "./generic_admin";
@@ -66,6 +67,7 @@ export function registerRoutes(app: Express) {
   app.use("/api/settings", requireAdmin, settingsRoutes);
   app.use("/api/returns", returnRoutes);
   app.use("/api/admin", genericAdminRouter);
+  app.use("/api/payouts", requireAdmin, payoutRoutes)
 
   //app.post("/api/webhooks/stripe", stripeWebhook)
 

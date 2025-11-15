@@ -14,7 +14,7 @@ router.get("/", requirePermission(Permission.VIEW_PAYOUTS), payoutController.get
 
 // Get merchant payout summary
 router.get(
-  "/merchant/:merchantId",
+  "/summary/:merchantId",
   requirePermission(Permission.VIEW_PAYOUTS),
   payoutController.getMerchantPayoutSummary,
 )

@@ -181,12 +181,17 @@ export const processPayout = async (payoutId: string, adminId?: string) => {
         .where(eq(merchants.id, payout.merchantId));
     }
 
-    // Send notification email
-    await sendPayoutNotificationEmail(
-      merchant.workEmail,
-      merchant.storeName,
-      Number(payout.amount)
-    );
+    // Send notification email (with error handling)
+    try {
+      await sendPayoutNotificationEmail(
+        merchant.workEmail,
+        merchant.storeName,
+        Number(payout.amount)
+      );
+    } catch (error) {
+      logger.error("Failed to send payout notification email:", error);
+      // Continue with the process even if email fails
+    }
 
     return { payout: { ...payout, status: finalStatus }, transfer: transfer };
   });
@@ -276,18 +281,23 @@ export const handleTransferWebhook = async (event: any) => {
         )
       );
 
-    // Send failure notification
-    const [merchant] = await db
-      .select()
-      .from(merchants)
-      .where(eq(merchants.id, payout.merchantId));
+    // Send failure notification (with error handling)
+    try {
+      const [merchant] = await db
+        .select()
+        .from(merchants)
+        .where(eq(merchants.id, payout.merchantId));
 
-    await sendPayoutFailedEmail(
-      merchant.workEmail,
-      merchant.storeName,
-      Number(payout.amount),
-      event.data.reason || "Unknown error"
-    );
+      await sendPayoutFailedEmail(
+        merchant.workEmail,
+        merchant.storeName,
+        Number(payout.amount),
+        event.data.reason || "Unknown error"
+      );
+    } catch (error) {
+      logger.error("Failed to send payout failed email:", error);
+      // Continue with the process even if email fails
+    }
 
     logger.error(`Payout ${payout.id} failed: ${event.data.reason}`);
   }

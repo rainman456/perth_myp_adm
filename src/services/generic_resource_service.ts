@@ -144,7 +144,7 @@ const checkPermission = (
  * Models that require specific service handlers
  */
 const specificServices = {
-  merchants: () => import("../services/merchant_service"),
+  merchants: () => import("./merchant_service"),
   categories: () => import("../services/category_service"),
  // products: () => import("../services/product_service"),
   // Add other specific services as needed

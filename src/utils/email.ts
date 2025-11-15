@@ -21,55 +21,66 @@ const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || "smtp.example.com",
   port: Number.parseInt(process.env.SMTP_PORT || "587"),
   secure: process.env.SMTP_SECURE === "true",
-  auth: {
+  auth: emailEnabled ? {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
-  },
+  } : undefined,
 });
+
+// Function to safely send emails with error handling
+const safeSendMail = async (mailOptions: any) => {
+  if (!emailEnabled) {
+    console.log(`[Email Disabled] Would send email to ${mailOptions.to}`);
+    return;
+  }
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`Email sent successfully to ${mailOptions.to}`);
+  } catch (error: any) {
+    console.error(`Failed to send email to ${mailOptions.to}:`, error.message);
+    // Don't throw the error to prevent breaking the main application flow
+  }
+};
 
 export const sendApprovalEmail = async (
   email: string,
   storeName: string,
   tempPassword: string
 ) => {
-  if (!emailEnabled) {
-    console.log(`[Email Disabled] Would send approval email to ${email}`);
-    return;
-  }
-
   const loginUrl =
     process.env.MERCHANT_LOGIN_URL || "https://yourplatform.com/merchant/login";
 
   const mailOptions = {
-    from: process.env.SMTP_FROM,
+    from: process.env.SMTP_FROM || "noreply@yourplatform.com",
     to: email,
     subject: `🎉 Your ${storeName} Application Has Been Approved!`,
     html: applicationApprovedTemplate(storeName, email, tempPassword, loginUrl),
   };
 
-  await transporter.sendMail(mailOptions);
+  await safeSendMail(mailOptions);
 };
 
 export const sendRejectionEmail = async (email: string, reason: string) => {
   const mailOptions = {
-    from: process.env.SMTP_FROM,
+    from: process.env.SMTP_FROM || "noreply@yourplatform.com",
     to: email,
     subject: "Merchant Application Status Update",
     html: applicationRejectedTemplate("Applicant", reason),
   };
 
-  await transporter.sendMail(mailOptions);
+  await safeSendMail(mailOptions);
 };
 
 export const requestMoreInfoEmail = async (email: string, message: string) => {
   const mailOptions = {
-    from: process.env.SMTP_FROM,
+    from: process.env.SMTP_FROM || "noreply@yourplatform.com",
     to: email,
     subject: "Additional Information Required - Merchant Application",
     html: moreInfoRequestTemplate("Applicant", message),
   };
 
-  await transporter.sendMail(mailOptions);
+  await safeSendMail(mailOptions);
 };
 
 export const sendPayoutNotificationEmail = async (
@@ -78,15 +89,14 @@ export const sendPayoutNotificationEmail = async (
   amount: number
 ) => {
   const reference = `PAY-${Date.now()}`;
-
   const mailOptions = {
-    from: process.env.SMTP_FROM,
+    from: process.env.SMTP_FROM || "noreply@yourplatform.com",
     to: email,
     subject: `💰 Payout Initiated - ${storeName}`,
     html: payoutInitiatedTemplate(storeName, amount, reference),
   };
 
-  await transporter.sendMail(mailOptions);
+  await safeSendMail(mailOptions);
 };
 
 export const sendPayoutFailedEmail = async (
@@ -96,13 +106,13 @@ export const sendPayoutFailedEmail = async (
   reason: string
 ) => {
   const mailOptions = {
-    from: process.env.SMTP_FROM,
+    from: process.env.SMTP_FROM || "noreply@yourplatform.com",
     to: email,
     subject: `⚠️ Payout Failed - ${storeName}`,
     html: payoutFailedTemplate(storeName, amount, reason),
   };
 
-  await transporter.sendMail(mailOptions);
+  await safeSendMail(mailOptions);
 };
 
 export const sendPayoutCompletedEmail = async (
@@ -113,13 +123,13 @@ export const sendPayoutCompletedEmail = async (
   const reference = `PAY-${Date.now()}`;
 
   const mailOptions = {
-    from: process.env.SMTP_FROM,
+    from: process.env.SMTP_FROM || "noreply@yourplatform.com",
     to: email,
     subject: `✅ Payout Completed - ${storeName}`,
     html: payoutCompletedTemplate(storeName, amount, reference),
   };
 
-  await transporter.sendMail(mailOptions);
+  await safeSendMail(mailOptions);
 };
 
 export const sendMerchantSuspendedEmail = async (
@@ -128,13 +138,13 @@ export const sendMerchantSuspendedEmail = async (
   reason: string
 ) => {
   const mailOptions = {
-    from: process.env.SMTP_FROM,
+    from: process.env.SMTP_FROM || "noreply@yourplatform.com",
     to: email,
     subject: `Account Status Update - ${storeName}`,
     html: merchantSuspendedTemplate(storeName, reason),
   };
 
-  await transporter.sendMail(mailOptions);
+  await safeSendMail(mailOptions);
 };
 
 export const sendWeeklyPayoutSummary = async (
@@ -150,7 +160,7 @@ export const sendWeeklyPayoutSummary = async (
   }
 ) => {
   const mailOptions = {
-    from: process.env.SMTP_FROM,
+    from: process.env.SMTP_FROM || "noreply@yourplatform.com",
     to: email,
     subject: `📊 Weekly Payout Summary - ${storeName}`,
     html: weeklyPayoutSummaryTemplate(
@@ -164,5 +174,5 @@ export const sendWeeklyPayoutSummary = async (
     ),
   };
 
-  await transporter.sendMail(mailOptions);
+  await safeSendMail(mailOptions);
 };

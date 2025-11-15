@@ -8,8 +8,8 @@ export default defineConfig({
   out: "./migrations",
   //schema: "./src/models/*.ts", // Updated to multiple files
   schema: [
-    //"./src/models/merchant.ts",
-    "./src/models/admins.ts",
+   
+    "./src/models/payout.ts",
   ],
   dialect: "postgresql",
   dbCredentials: {

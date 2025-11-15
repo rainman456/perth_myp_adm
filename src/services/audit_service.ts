@@ -14,7 +14,7 @@ export interface AdminLogEntry {
 }
 
 // Create audit log entry
-export const createAuditLog = async (logEntry: AdminLogEntry) => {
+export const createAuditLog = async (logEntry: AdminLogEntry): Promise<any> => {
   try {
     const [log] = await db.insert(adminLogs).values({
       id: uuid(),
