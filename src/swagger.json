@@ -1,0 +1,3998 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Admin API",
+    "version": "1.0.0",
+    "description": "API for ARONOVA"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080/api",
+      "description": "Development server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "AdminAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "UserCreate": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@example.com"
+          },
+          "name": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "country": {
+            "type": "string",
+            "example": "Nigeria"
+          }
+        },
+        "required": [
+          "email",
+          "name"
+        ]
+      },
+      "UserUpdate": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@example.com"
+          },
+          "name": {
+            "type": "string",
+            "example": "John Smith"
+          },
+          "country": {
+            "type": "string",
+            "example": "Ghana"
+          }
+        }
+      },
+      "MerchantCreate": {
+        "type": "object",
+        "properties": {
+          "storeName": {
+            "type": "string",
+            "example": "Tech Gadgets Store"
+          },
+          "name": {
+            "type": "string",
+            "example": "Jane Smith"
+          },
+          "personalEmail": {
+            "type": "string",
+            "format": "email",
+            "example": "jane@example.com"
+          },
+          "workEmail": {
+            "type": "string",
+            "format": "email",
+            "example": "info@techgadgets.com"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "example": "+2341234567890"
+          },
+          "businessType": {
+            "type": "string",
+            "example": "Retail"
+          },
+          "website": {
+            "type": "string",
+            "format": "uri",
+            "example": "https://techgadgets.com"
+          },
+          "businessDescription": {
+            "type": "string",
+            "example": "Selling the latest tech gadgets"
+          },
+          "businessRegistrationNumber": {
+            "type": "string",
+            "example": "RC123456789"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "suspended"
+            ],
+            "example": "active"
+          },
+          "commissionTier": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "premium"
+            ],
+            "example": "standard"
+          },
+          "commissionRate": {
+            "type": "string",
+            "example": "5.00"
+          }
+        },
+        "required": [
+          "storeName",
+          "name",
+          "personalEmail",
+          "workEmail",
+          "businessRegistrationNumber"
+        ]
+      },
+      "MerchantUpdate": {
+        "type": "object",
+        "properties": {
+          "storeName": {
+            "type": "string",
+            "example": "Updated Tech Store"
+          },
+          "name": {
+            "type": "string",
+            "example": "Jane Smith"
+          },
+          "personalEmail": {
+            "type": "string",
+            "format": "email",
+            "example": "jane@example.com"
+          },
+          "workEmail": {
+            "type": "string",
+            "format": "email",
+            "example": "info@techgadgets.com"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "example": "+2341234567890"
+          },
+          "businessType": {
+            "type": "string",
+            "example": "Retail"
+          },
+          "website": {
+            "type": "string",
+            "format": "uri",
+            "example": "https://techgadgets.com"
+          },
+          "businessDescription": {
+            "type": "string",
+            "example": "Selling the latest tech gadgets"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "suspended"
+            ],
+            "example": "suspended"
+          },
+          "commissionTier": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "premium"
+            ],
+            "example": "premium"
+          },
+          "commissionRate": {
+            "type": "string",
+            "example": "7.00"
+          }
+        }
+      },
+      "CategoryCreate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Electronics"
+          },
+          "parentId": {
+            "type": "integer",
+            "example": 1
+          },
+          "attributes": {
+            "type": "object",
+            "example": {
+              "color": "string",
+              "size": "string"
+            }
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "CategoryUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Updated Electronics"
+          },
+          "parentId": {
+            "type": "integer",
+            "example": 2
+          },
+          "attributes": {
+            "type": "object",
+            "example": {
+              "color": "string",
+              "size": "string"
+            }
+          }
+        }
+      },
+      "DisputeCreate": {
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "string",
+            "example": "order-123"
+          },
+          "customerId": {
+            "type": "string",
+            "example": "customer-123"
+          },
+          "merchantId": {
+            "type": "string",
+            "example": "merchant-123"
+          },
+          "reason": {
+            "type": "string",
+            "example": "Damaged product"
+          },
+          "description": {
+            "type": "string",
+            "example": "Product arrived damaged"
+          },
+          "status": {
+            "type": "string",
+            "example": "open"
+          }
+        },
+        "required": [
+          "orderId",
+          "customerId",
+          "merchantId",
+          "reason",
+          "description"
+        ]
+      },
+      "DisputeUpdate": {
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "string",
+            "example": "order-123"
+          },
+          "customerId": {
+            "type": "string",
+            "example": "customer-123"
+          },
+          "merchantId": {
+            "type": "string",
+            "example": "merchant-123"
+          },
+          "reason": {
+            "type": "string",
+            "example": "Damaged product"
+          },
+          "description": {
+            "type": "string",
+            "example": "Product arrived damaged"
+          },
+          "status": {
+            "type": "string",
+            "example": "resolved"
+          },
+          "resolution": {
+            "type": "string",
+            "example": "Refunded"
+          }
+        }
+      },
+      "ReturnRequestCreate": {
+        "type": "object",
+        "properties": {
+          "orderItemId": {
+            "type": "string",
+            "example": "item-123"
+          },
+          "customerId": {
+            "type": "string",
+            "example": "customer-123"
+          },
+          "reason": {
+            "type": "string",
+            "example": "Wrong item received"
+          },
+          "description": {
+            "type": "string",
+            "example": "I ordered a blue shirt but received a red one"
+          },
+          "status": {
+            "type": "string",
+            "example": "pending"
+          }
+        },
+        "required": [
+          "orderItemId",
+          "customerId",
+          "reason"
+        ]
+      },
+      "ReturnRequestUpdate": {
+        "type": "object",
+        "properties": {
+          "orderItemId": {
+            "type": "string",
+            "example": "item-123"
+          },
+          "customerId": {
+            "type": "string",
+            "example": "customer-123"
+          },
+          "reason": {
+            "type": "string",
+            "example": "Wrong item received"
+          },
+          "description": {
+            "type": "string",
+            "example": "I ordered a blue shirt but received a red one"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "approved",
+              "rejected",
+              "completed"
+            ],
+            "example": "approved"
+          },
+          "merchantNotes": {
+            "type": "string",
+            "example": "Approved for return"
+          }
+        }
+      },
+      "PayoutCreate": {
+        "type": "object",
+        "properties": {
+          "merchantId": {
+            "type": "string",
+            "example": "merchant-123"
+          },
+          "amount": {
+            "type": "string",
+            "example": "1000.00"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "Pending",
+              "Processing",
+              "Completed",
+              "Failed"
+            ],
+            "example": "Pending"
+          },
+          "payoutAccountId": {
+            "type": "string",
+            "example": "account-123"
+          }
+        },
+        "required": [
+          "merchantId",
+          "amount",
+          "payoutAccountId"
+        ]
+      },
+      "PayoutUpdate": {
+        "type": "object",
+        "properties": {
+          "merchantId": {
+            "type": "string",
+            "example": "merchant-123"
+          },
+          "amount": {
+            "type": "string",
+            "example": "1000.00"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "Pending",
+              "Processing",
+              "Completed",
+              "Failed"
+            ],
+            "example": "Completed"
+          },
+          "payoutAccountId": {
+            "type": "string",
+            "example": "account-123"
+          }
+        }
+      },
+      "SettingsCreate": {
+        "type": "object",
+        "properties": {
+          "fees": {
+            "type": "string",
+            "example": "5.00"
+          },
+          "taxRate": {
+            "type": "string",
+            "example": "0.00"
+          },
+          "shippingOptions": {
+            "type": "object",
+            "example": {
+              "standard": "500.00",
+              "express": "1000.00"
+            }
+          }
+        }
+      },
+      "SettingsUpdate": {
+        "type": "object",
+        "properties": {
+          "fees": {
+            "type": "string",
+            "example": "7.00"
+          },
+          "taxRate": {
+            "type": "string",
+            "example": "0.00"
+          },
+          "shippingOptions": {
+            "type": "object",
+            "example": {
+              "standard": "600.00",
+              "express": "1200.00"
+            }
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "AdminAuth": []
+    }
+  ],
+  "paths": {
+    "/webhook/paystack": {
+      "post": {
+        "summary": "Paystack webhook endpoint",
+        "tags": [
+          "Webhook"
+        ],
+        "description": "Receives webhook events from Paystack for transfer status updates",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook processed successfully"
+          },
+          "400": {
+            "description": "Invalid signature"
+          }
+        }
+      }
+    },
+    "/admin/login": {
+      "post": {
+        "summary": "Admin sign-in",
+        "tags": [
+          "Admin"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "admin@mail.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "adminpass"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string"
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Email and password are required"
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        }
+      }
+    },
+    "/admin": {
+      "get": {
+        "summary": "Get all admins",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "AdminAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of admins",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "admins": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "username": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": [
+                              "superadmin",
+                              "admin",
+                              "support"
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new admin",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "AdminAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "example": "johndoe"
+                  },
+                  "email": {
+                    "type": "string",
+                    "example": "admin@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "example": "securepassword123"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "superadmin",
+                      "admin",
+                      "support"
+                    ],
+                    "example": "admin"
+                  }
+                },
+                "required": [
+                  "username",
+                  "email",
+                  "password",
+                  "role"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Admin created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "admin": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/admin/{id}/role": {
+      "patch": {
+        "summary": "Update admin role",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "AdminAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Admin ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "superadmin",
+                      "admin",
+                      "support"
+                    ],
+                    "example": "admin"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Admin role updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "admin": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/categories": {
+      "post": {
+        "summary": "Create a new category",
+        "tags": [
+          "Categories"
+        ],
+        "security": [
+          {
+            "AdminAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Electronics"
+                  },
+                  "parentId": {
+                    "type": "integer",
+                    "nullable": true,
+                    "example": 1
+                  },
+                  "attributes": {
+                    "type": "object",
+                    "example": {
+                      "color": "string",
+                      "size": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Category created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Electronics"
+                    },
+                    "parentId": {
+                      "type": "integer",
+                      "nullable": true,
+                      "example": 1
+                    },
+                    "attributes": {
+                      "type": "object",
+                      "example": {
+                        "color": "string",
+                        "size": "string"
+                      }
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-09-13T11:00:00Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Invalid category data"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Get all categories",
+        "tags": [
+          "Categories"
+        ],
+        "security": [
+          {
+            "AdminAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of categories",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer",
+                        "example": 1
+                      },
+                      "name": {
+                        "type": "string",
+                        "example": "Electronics"
+                      },
+                      "parentId": {
+                        "type": "integer",
+                        "nullable": true,
+                        "example": 1
+                      },
+                      "attributes": {
+                        "type": "object",
+                        "example": {
+                          "color": "string",
+                          "size": "string"
+                        }
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-09-13T11:00:00Z"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/categories/tree": {
+      "get": {
+        "summary": "Get category tree hierarchy",
+        "tags": [
+          "Categories"
+        ],
+        "security": [
+          {
+            "AdminAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category tree hierarchy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer",
+                        "example": 1
+                      },
+                      "name": {
+                        "type": "string",
+                        "example": "Electronics"
+                      },
+                      "parentId": {
+                        "type": "integer",
+                        "nullable": true,
+                        "example": null
+                      },
+                      "attributes": {
+                        "type": "object",
+                        "example": {
+                          "color": "string",
+                          "size": "string"
+                        }
+                      },
+                      "children": {
+                        "type": "array",
+                        "items": {
+                          "type": "object"
+                        }
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-09-13T11:00:00Z"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/categories/{id}": {
+      "get": {
+        "summary": "Get a category by ID",
+        "tags": [
+          "Categories"
+        ],
+        "security": [
+          {
+            "AdminAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Category ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Electronics"
+                    },
+                    "parentId": {
+                      "type": "integer",
+                      "nullable": true,
+                      "example": 1
+                    },
+                    "attributes": {
+                      "type": "object",
+                      "example": {
+                        "color": "string",
+                        "size": "string"
+                      }
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-09-13T11:00:00Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Category not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Category not found"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a category",
+        "tags": [
+          "Categories"
+        ],
+        "security": [
+          {
+            "AdminAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Category ID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Category deleted"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Category not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Category not found"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update a category",
+        "tags": [
+          "Categories"
+        ],
+        "security": [
+          {
+            "AdminAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Category ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Updated Electronics"
+                  },
+                  "parentId": {
+                    "type": "integer",
+                    "nullable": true,
+                    "example": 1
+                  },
+                  "attributes": {
+                    "type": "object",
+                    "example": {
+                      "color": "string",
+                      "size": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Category updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Updated Electronics"
+                    },
+                    "parentId": {
+                      "type": "integer",
+                      "nullable": true,
+                      "example": 1
+                    },
+                    "attributes": {
+                      "type": "object",
+                      "example": {
+                        "color": "string",
+                        "size": "string"
+                      }
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-09-13T11:00:00Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Invalid category data"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Category not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Category not found"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/categories/{id}/attributes": {
+      "patch": {
+        "summary": "Add or update category attribute",
+        "tags": [
+          "Categories"
+        ],
+        "security": [
+          {
+            "AdminAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Category ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "example": "color"
+                  },
+                  "value": {
+                    "type": "string",
+                    "example": "string"
+                  }
+                },
+                "required": [
+                  "key",
+                  "value"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Category with updated attributes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Electronics"
+                    },
+                    "parentId": {
+                      "type": "integer",
+                      "nullable": true,
+                      "example": 1
+                    },
+                    "attributes": {
+                      "type": "object",
+                      "example": {
+                        "color": "string",
+                        "size": "string"
+                      }
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-09-13T11:00:00Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Invalid attribute data"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Category not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Category not found"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/{model}": {
+      "get": {
+        "summary": "List records with pagination and filtering",
+        "tags": [
+          "Admin Resources"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "users",
+                "merchants",
+                "categories",
+                "disputes",
+                "return_requests",
+                "payouts",
+                "settings",
+                "bank_details",
+                "order_merchant_splits"
+              ]
+            },
+            "description": "Model name"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 50
+            },
+            "description": "Number of records to return"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 0
+            },
+            "description": "Number of records to skip"
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter users by email (users model only)"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by status (merchants, disputes, return_requests, payouts models)"
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by name (users, merchants, categories models)"
+          },
+          {
+            "name": "storeName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter merchants by store name (merchants model only)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of records with metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "example": 100
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "example": 50
+                    },
+                    "offset": {
+                      "type": "integer",
+                      "example": 0
+                    }
+                  }
+                },
+                "examples": {
+                  "UsersList": {
+                    "summary": "List of users",
+                    "value": {
+                      "data": [
+                        {
+                          "id": 123,
+                          "email": "user@example.com",
+                          "name": "John Doe",
+                          "country": "Nigeria",
+                          "createdAt": "2023-01-01T00:00:00Z",
+                          "updatedAt": "2023-01-01T00:00:00Z"
+                        },
+                        {
+                          "id": 124,
+                          "email": "user2@example.com",
+                          "name": "Jane Smith",
+                          "country": "Ghana",
+                          "createdAt": "2023-01-02T00:00:00Z",
+                          "updatedAt": "2023-01-02T00:00:00Z"
+                        }
+                      ],
+                      "total": 100,
+                      "limit": 2,
+                      "offset": 0
+                    }
+                  },
+                  "MerchantsList": {
+                    "summary": "List of merchants",
+                    "value": {
+                      "data": [
+                        {
+                          "id": "merchant-uuid-1",
+                          "storeName": "Tech Gadgets Store",
+                          "name": "John Doe",
+                          "personalEmail": "john@example.com",
+                          "status": "active",
+                          "commissionRate": "5.00",
+                          "createdAt": "2023-01-01T00:00:00Z",
+                          "updatedAt": "2023-01-01T00:00:00Z"
+                        },
+                        {
+                          "id": "merchant-uuid-2",
+                          "storeName": "Fashion Store",
+                          "name": "Jane Smith",
+                          "personalEmail": "jane@example.com",
+                          "status": "suspended",
+                          "commissionRate": "7.00",
+                          "createdAt": "2023-01-02T00:00:00Z",
+                          "updatedAt": "2023-01-02T00:00:00Z"
+                        }
+                      ],
+                      "total": 50,
+                      "limit": 2,
+                      "offset": 0
+                    }
+                  },
+                  "CategoriesList": {
+                    "summary": "List of categories",
+                    "value": {
+                      "data": [
+                        {
+                          "id": 1,
+                          "name": "Electronics",
+                          "parentId": null,
+                          "attributes": {},
+                          "createdAt": "2023-01-01T00:00:00Z"
+                        },
+                        {
+                          "id": 2,
+                          "name": "Clothing",
+                          "parentId": null,
+                          "attributes": {},
+                          "createdAt": "2023-01-02T00:00:00Z"
+                        }
+                      ],
+                      "total": 20,
+                      "limit": 50,
+                      "offset": 0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Model 'invalid_model' not found"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/{model}/search": {
+      "get": {
+        "summary": "Search records (superadmin only)",
+        "tags": [
+          "Admin Resources"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "users",
+                "merchants",
+                "categories",
+                "disputes",
+                "return_requests",
+                "payouts",
+                "settings",
+                "bank_details",
+                "order_merchant_splits"
+              ]
+            },
+            "description": "Model name"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Search query text"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "count": {
+                      "type": "integer",
+                      "example": 5
+                    }
+                  }
+                },
+                "examples": {
+                  "UserSearch": {
+                    "summary": "Search users",
+                    "value": {
+                      "data": [
+                        {
+                          "id": 123,
+                          "email": "john@example.com",
+                          "name": "John Doe",
+                          "country": "Nigeria",
+                          "createdAt": "2023-01-01T00:00:00Z",
+                          "updatedAt": "2023-01-01T00:00:00Z"
+                        },
+                        {
+                          "id": 124,
+                          "email": "johnson@example.com",
+                          "name": "Johnson Smith",
+                          "country": "Ghana",
+                          "createdAt": "2023-01-02T00:00:00Z",
+                          "updatedAt": "2023-01-02T00:00:00Z"
+                        }
+                      ],
+                      "count": 2
+                    }
+                  },
+                  "MerchantSearch": {
+                    "summary": "Search merchants",
+                    "value": {
+                      "data": [
+                        {
+                          "id": "merchant-uuid-1",
+                          "storeName": "Tech Gadgets Store",
+                          "name": "John Doe",
+                          "personalEmail": "john@example.com",
+                          "status": "active",
+                          "commissionRate": "5.00",
+                          "createdAt": "2023-01-01T00:00:00Z",
+                          "updatedAt": "2023-01-01T00:00:00Z"
+                        }
+                      ],
+                      "count": 1
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing search query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Search query (q) is required"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/{model}/{id}": {
+      "get": {
+        "summary": "Show record (superadmin only)",
+        "tags": [
+          "Admin Resources"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "users",
+                "merchants",
+                "categories",
+                "disputes",
+                "return_requests",
+                "payouts",
+                "settings",
+                "bank_details",
+                "order_merchant_splits"
+              ]
+            },
+            "description": "Model name"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Record ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Record details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                },
+                "examples": {
+                  "User": {
+                    "summary": "User details",
+                    "value": {
+                      "id": 123,
+                      "email": "user@example.com",
+                      "name": "John Doe",
+                      "country": "Nigeria",
+                      "createdAt": "2023-01-01T00:00:00Z",
+                      "updatedAt": "2023-01-01T00:00:00Z"
+                    }
+                  },
+                  "Merchant": {
+                    "summary": "Merchant details",
+                    "value": {
+                      "id": "merchant-uuid",
+                      "storeName": "Tech Gadgets Store",
+                      "name": "Jane Smith",
+                      "personalEmail": "jane@example.com",
+                      "workEmail": "info@techgadgets.com",
+                      "status": "active",
+                      "commissionTier": "standard",
+                      "commissionRate": "5.00",
+                      "createdAt": "2023-01-01T00:00:00Z",
+                      "updatedAt": "2023-01-01T00:00:00Z"
+                    }
+                  },
+                  "Category": {
+                    "summary": "Category details",
+                    "value": {
+                      "id": 123,
+                      "name": "Electronics",
+                      "parentId": 1,
+                      "attributes": {
+                        "color": "string",
+                        "size": "string"
+                      },
+                      "createdAt": "2023-01-01T00:00:00Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Record not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Record with id '123' not found"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete record (superadmin only)",
+        "tags": [
+          "Admin Resources"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "users",
+                "merchants",
+                "categories",
+                "disputes",
+                "return_requests",
+                "payouts",
+                "settings",
+                "bank_details",
+                "order_merchant_splits"
+              ]
+            },
+            "description": "Model name"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Record ID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Record deleted"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Record not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Record with id '123' not found"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/{model}/bulk": {
+      "delete": {
+        "summary": "Bulk delete (superadmin only)",
+        "tags": [
+          "Admin Resources"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "users",
+                "merchants",
+                "categories",
+                "disputes",
+                "return_requests",
+                "payouts",
+                "settings",
+                "bank_details",
+                "order_merchant_splits"
+              ]
+            },
+            "description": "Model name"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "ids"
+                ],
+                "properties": {
+                  "ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1,
+                    "description": "Array of record IDs to delete"
+                  }
+                }
+              },
+              "examples": {
+                "UserBulkDelete": {
+                  "summary": "Bulk delete users",
+                  "value": {
+                    "ids": [
+                      1,
+                      2,
+                      3
+                    ]
+                  }
+                },
+                "MerchantBulkDelete": {
+                  "summary": "Bulk delete merchants",
+                  "value": {
+                    "ids": [
+                      "merchant-uuid-1",
+                      "merchant-uuid-2"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Bulk delete result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "deleted": {
+                      "type": "integer",
+                      "example": 3
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid IDs array",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "IDs array is required and must not be empty"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/merchants/applications": {
+      "get": {
+        "summary": "Get all merchant applications",
+        "tags": [
+          "Merchants"
+        ],
+        "security": [
+          {
+            "AdminAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of applications",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "storeName": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/merchants/applications/pending": {
+      "get": {
+        "summary": "Get pending merchant applications",
+        "tags": [
+          "Merchants"
+        ],
+        "security": [
+          {
+            "AdminAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of pending applications",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "storeName": {
+                        "type": "string"
+                      },
+                      "businessEmail": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string",
+                        "example": "pending"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/merchants/applications/{id}/approve": {
+      "post": {
+        "summary": "Approve a merchant application",
+        "tags": [
+          "Merchants"
+        ],
+        "security": [
+          {
+            "AdminAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Application ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "tempPassword": {
+                    "type": "string",
+                    "format": "password",
+                    "example": "temp123pass"
+                  }
+                },
+                "required": [
+                  "tempPassword"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Application approved and merchant created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "application": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "123e4567-e89b-12d3-a456-426614174000"
+                        },
+                        "status": {
+                          "type": "string",
+                          "example": "approved"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2025-09-13T11:00:00Z"
+                        }
+                      }
+                    },
+                    "merchant": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "456e7890-f12c-34d5-a678-426614174001"
+                        },
+                        "merchantId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "789f0123-g45h-67i8-j901-426614174002"
+                        },
+                        "storeName": {
+                          "type": "string",
+                          "example": "Test Store"
+                        },
+                        "status": {
+                          "type": "string",
+                          "example": "active"
+                        },
+                        "commissionTier": {
+                          "type": "string",
+                          "example": "standard"
+                        },
+                        "commissionRate": {
+                          "type": "number",
+                          "format": "float",
+                          "example": 5
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Application not found or already processed"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/merchants/applications/{id}/reject": {
+      "post": {
+        "summary": "Reject a merchant application",
+        "tags": [
+          "Merchants"
+        ],
+        "security": [
+          {
+            "AdminAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Application ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "example": "Incomplete documentation"
+                  }
+                },
+                "required": [
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Application rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "application": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "123e4567-e89b-12d3-a456-426614174000"
+                        },
+                        "status": {
+                          "type": "string",
+                          "example": "rejected"
+                        },
+                        "rejectionReason": {
+                          "type": "string",
+                          "example": "Incomplete documentation"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2025-09-13T11:00:00Z"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Application not found or already processed"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/merchants/applications/{id}/more-info": {
+      "post": {
+        "summary": "Request more information for a merchant application",
+        "tags": [
+          "Merchants"
+        ],
+        "security": [
+          {
+            "AdminAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Application ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "type": "string",
+                    "example": "Please provide updated business registration certificate"
+                  }
+                },
+                "required": [
+                  "message"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "More info request sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "application": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "123e4567-e89b-12d3-a456-426614174000"
+                        },
+                        "status": {
+                          "type": "string",
+                          "example": "pending"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2025-09-13T11:00:00Z"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Application not found"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/merchants": {
+      "get": {
+        "summary": "Get all merchants",
+        "tags": [
+          "Merchants"
+        ],
+        "security": [
+          {
+            "AdminAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of merchants",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "merchantId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "storeName": {
+                        "type": "string"
+                      },
+                      "businessEmail": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "active",
+                          "suspended",
+                          "inactive"
+                        ]
+                      },
+                      "commissionTier": {
+                        "type": "string",
+                        "enum": [
+                          "standard",
+                          "premium"
+                        ]
+                      },
+                      "commissionRate": {
+                        "type": "number",
+                        "format": "float"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/merchants/{id}/suspend": {
+      "post": {
+        "summary": "Suspend a merchant",
+        "tags": [
+          "Merchants"
+        ],
+        "security": [
+          {
+            "AdminAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Merchant ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "example": "Violation of terms"
+                  }
+                },
+                "required": [
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Merchant suspended",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "merchant": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "456e7890-f12c-34d5-a678-426614174001"
+                        },
+                        "status": {
+                          "type": "string",
+                          "example": "suspended"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2025-09-13T11:00:00Z"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Merchant not found"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/merchants/{id}/commission": {
+      "patch": {
+        "summary": "Update merchant commission tier",
+        "tags": [
+          "Merchants"
+        ],
+        "security": [
+          {
+            "AdminAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Merchant ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "commissionTier": {
+                    "type": "string",
+                    "enum": [
+                      "standard",
+                      "premium",
+                      "enterprise"
+                    ],
+                    "example": "premium"
+                  },
+                  "commissionRate": {
+                    "type": "number",
+                    "format": "float",
+                    "minimum": 0,
+                    "maximum": 100,
+                    "example": 3.5
+                  }
+                },
+                "required": [
+                  "commissionTier",
+                  "commissionRate"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Commission tier updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "merchant": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "example": "456e7890-f12c-34d5-a678-426614174001"
+                        },
+                        "commissionTier": {
+                          "type": "string",
+                          "example": "premium"
+                        },
+                        "commissionRate": {
+                          "type": "number",
+                          "format": "float",
+                          "example": 3.5
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2025-09-13T11:00:00Z"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Invalid tier or rate"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Merchant not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Merchant not found"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payouts": {
+      "get": {
+        "summary": "Get all payouts",
+        "tags": [
+          "Payouts"
+        ],
+        "security": [
+          {
+            "AdminAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "merchantId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filter by merchant ID"
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "processing",
+                "completed",
+                "failed"
+              ]
+            },
+            "description": "Filter by payout status"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Limit the number of results"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of payouts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "payouts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "merchantId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "amount": {
+                            "type": "number",
+                            "format": "float"
+                          },
+                          "currency": {
+                            "type": "string",
+                            "example": "NGN"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "pending",
+                              "processing",
+                              "completed",
+                              "failed"
+                            ]
+                          },
+                          "reference": {
+                            "type": "string"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/payouts/summary/{merchantId}": {
+      "get": {
+        "summary": "Get merchant payout summary",
+        "tags": [
+          "Payouts"
+        ],
+        "security": [
+          {
+            "AdminAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "merchantId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Merchant ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payout summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "totalPayouts": {
+                      "type": "number"
+                    },
+                    "totalAmount": {
+                      "type": "number",
+                      "format": "float"
+                    },
+                    "pendingPayouts": {
+                      "type": "number"
+                    },
+                    "pendingAmount": {
+                      "type": "number",
+                      "format": "float"
+                    },
+                    "completedPayouts": {
+                      "type": "number"
+                    },
+                    "completedAmount": {
+                      "type": "number",
+                      "format": "float"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/payouts/aggregate": {
+      "post": {
+        "summary": "Aggregate eligible payouts",
+        "tags": [
+          "Payouts"
+        ],
+        "security": [
+          {
+            "AdminAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payout aggregation completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Payout aggregation completed"
+                    },
+                    "results": {
+                      "type": "object",
+                      "properties": {
+                        "processed": {
+                          "type": "integer"
+                        },
+                        "totalAmount": {
+                          "type": "number",
+                          "format": "float"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/payouts/{id}/process": {
+      "post": {
+        "summary": "Process a payout",
+        "tags": [
+          "Payouts"
+        ],
+        "security": [
+          {
+            "AdminAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Payout ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payout processing initiated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Payout processing initiated"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "status": {
+                          "type": "string",
+                          "example": "processing"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/returns": {
+      "post": {
+        "summary": "Create a return request (customer)",
+        "tags": [
+          "Returns"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "orderItemId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "example": "Damaged product"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "The product arrived damaged and is not usable"
+                  }
+                },
+                "required": [
+                  "orderItemId",
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Return request created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "returnRequest": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "orderItemId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "customerId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "reason": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "example": "pending"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      },
+      "get": {
+        "summary": "Get all returns (admin view)",
+        "tags": [
+          "Returns"
+        ],
+        "security": [
+          {
+            "AdminAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "approved",
+                "rejected",
+                "escalated",
+                "refunded"
+              ]
+            },
+            "description": "Filter by return status"
+          },
+          {
+            "in": "query",
+            "name": "merchantId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filter by merchant ID"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Limit the number of results"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of returns",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "returns": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "orderItemId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "customerId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "reason": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "pending",
+                              "approved",
+                              "rejected",
+                              "escalated",
+                              "refunded"
+                            ]
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/returns/{id}/merchant-review": {
+      "post": {
+        "summary": "Merchant reviews return",
+        "tags": [
+          "Returns"
+        ],
+        "security": [
+          {
+            "MerchantAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Return request ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "decision": {
+                    "type": "string",
+                    "enum": [
+                      "approved",
+                      "rejected"
+                    ],
+                    "example": "approved"
+                  },
+                  "merchantNotes": {
+                    "type": "string",
+                    "example": "Customer provided sufficient evidence"
+                  }
+                },
+                "required": [
+                  "decision"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return request reviewed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "returnRequest": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "status": {
+                          "type": "string",
+                          "example": "approved"
+                        },
+                        "merchantNotes": {
+                          "type": "string"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/returns/{id}/admin-escalate": {
+      "post": {
+        "summary": "Admin escalates return",
+        "tags": [
+          "Returns"
+        ],
+        "security": [
+          {
+            "AdminAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Return request ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "escalationNotes": {
+                    "type": "string",
+                    "example": "Requires higher authority review"
+                  }
+                },
+                "required": [
+                  "escalationNotes"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return request escalated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "returnRequest": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "status": {
+                          "type": "string",
+                          "example": "escalated"
+                        },
+                        "escalationNotes": {
+                          "type": "string"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/returns/{id}/admin-approve-refund": {
+      "post": {
+        "summary": "Admin approves refund",
+        "tags": [
+          "Returns"
+        ],
+        "security": [
+          {
+            "AdminAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Return request ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Refund approved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "returnRequest": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "status": {
+                          "type": "string",
+                          "example": "refunded"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Refund processed successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/settings": {
+      "get": {
+        "summary": "Get global settings",
+        "tags": [
+          "Settings"
+        ],
+        "security": [
+          {
+            "AdminAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Global settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "global"
+                    },
+                    "fees": {
+                      "type": "number",
+                      "format": "float",
+                      "example": 5
+                    },
+                    "taxRate": {
+                      "type": "number",
+                      "format": "float",
+                      "example": 0
+                    },
+                    "shippingOptions": {
+                      "type": "object",
+                      "example": {
+                        "standard": "5.00",
+                        "express": "15.00"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update global settings",
+        "tags": [
+          "Settings"
+        ],
+        "security": [
+          {
+            "AdminAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fees": {
+                    "type": "number",
+                    "format": "float",
+                    "example": 5
+                  },
+                  "taxRate": {
+                    "type": "number",
+                    "format": "float",
+                    "example": 0
+                  },
+                  "shippingOptions": {
+                    "type": "object",
+                    "example": {
+                      "standard": "5.00",
+                      "express": "15.00"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Settings updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "global"
+                    },
+                    "fees": {
+                      "type": "number",
+                      "format": "float",
+                      "example": 5
+                    },
+                    "taxRate": {
+                      "type": "number",
+                      "format": "float",
+                      "example": 0
+                    },
+                    "shippingOptions": {
+                      "type": "object",
+                      "example": {
+                        "standard": "5.00",
+                        "express": "15.00"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Invalid settings data"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": []
+}
