@@ -26,7 +26,7 @@ export const approveApplication = async (id: string, adminId: string) => {
   }
   
   // Generate temporary password
-  const tempPassword = Math.random().toString(36).slice(-8);
+  //const tempPassword = Math.random().toString(36).slice(-8);
   
   // Create merchant
   const merchantData = {
@@ -48,7 +48,7 @@ export const approveApplication = async (id: string, adminId: string) => {
     status: "active",
     commissionTier: "standard",
     commissionRate: "5.00",
-    password: tempPassword,
+    password: "tempPassword",
   };
   
   const [merchant] = await repo.createMerchant(merchantData);
@@ -71,7 +71,7 @@ export const approveApplication = async (id: string, adminId: string) => {
   
   // Send approval email (with error handling)
   try {
-    await sendApprovalEmail(application.personalEmail, application.storeName, tempPassword);
+    await sendApprovalEmail(application.personalEmail, application.storeName, "tempPassword");
   } catch (error) {
     console.error("Failed to send approval email:", error);
     // Continue with the process even if email fails
