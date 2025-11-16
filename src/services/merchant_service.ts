@@ -30,7 +30,6 @@ export const approveApplication = async (id: string, adminId: string) => {
   
   // Create merchant
   const merchantData = {
-    id: uuidv4(),
     applicationId: application.id,
     merchantId: uuidv4(),
     storeName: application.storeName,
