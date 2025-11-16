@@ -12,7 +12,7 @@ type TableType = typeof modelsModule[ModelKey]; // Fixed: Use typeof directly, n
 // Build model map from exports
 const MODELS = {
   admins: modelsModule.admins,
- // announcements: modelsModule.announcements,
+  announcements: modelsModule.announcements,
   bank_details: modelsModule.merchantBankDetails,
   //carts: modelsModule.carts,
   //cart_items: modelsModule.cartItems,
@@ -21,7 +21,7 @@ const MODELS = {
   //inventories: modelsModule.inventories,
  // media: modelsModule.medias,
   merchants: modelsModule.merchants,
-  //orders: modelsModule.orders,
+  orders: modelsModule.orders,
  // order_items: modelsModule.orderItems,
   order_merchant_splits: modelsModule.orderMerchantSplits,
  // payments: modelsModule.payments,

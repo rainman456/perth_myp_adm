@@ -1,19 +1,26 @@
 import nodemailer from "nodemailer";
 import * as dotenv from "dotenv";
+import { config } from "./config";
 dotenv.config();
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT || "587"),
-  secure: process.env.SMTP_SECURE === "true",
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-  connectionTimeout: 5000, // 5 seconds
-  socketTimeout: 5000, // 5 seconds
-});
 
+const emailEnabled = config.smtp.enabled;
+if (!emailEnabled) {
+  console.warn("Email service disabled: SMTP credentials not configured");
+}
+
+const transporter = nodemailer.createTransport({
+    host: config.smtp.host,
+    port: config.smtp.port,
+    secure: config.smtp.secure, // true for port 465, false for 587
+    auth: emailEnabled ? {
+      user: config.smtp.user,
+      pass: config.smtp.pass,
+    } : undefined,
+    connectionTimeout: config.smtp.connectionTimeout, // 5 seconds
+    socketTimeout: config.smtp.socketTimeout, // 5 seconds
+  });
+  
 async function testSend() {
   try {
     await transporter.verify();

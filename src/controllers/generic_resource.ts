@@ -446,7 +446,7 @@ export const search = asyncHandler(async (req: Request, res: Response) => {
  *               properties:
  *                 error:
  *                   type: string
- *                   example: Validation error: email must be a valid email
+ *                   example: "Validation error: email must be a valid email"
  *       401:
  *         description: Unauthorized
  *         content:
@@ -699,7 +699,7 @@ export const show = asyncHandler(async (req: Request, res: Response) => {
  *               properties:
  *                 error:
  *                   type: string
- *                   example: Validation error: name is required
+ *                   example: "Validation error: name is required"
  *       401:
  *         description: Unauthorized
  *         content:
