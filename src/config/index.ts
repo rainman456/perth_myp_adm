@@ -33,6 +33,8 @@ export const config = {
     pass: process.env.SMTP_PASS || "",
     from: process.env.SMTP_FROM || "noreply@example.com",
     secure: process.env.SMTP_SECURE === "true",
+    connectionTimeout: 5000, // 5 seconds
+    socketTimeout: 5000, // 5 seconds
     enabled: !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS),
   },
   paystack: {

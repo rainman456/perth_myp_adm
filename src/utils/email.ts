@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { config } from "../config/index";
 import {
   applicationApprovedTemplate,
   applicationRejectedTemplate,
@@ -11,20 +12,22 @@ import {
 } from "./email-templates";
 
 // Email configuration - optional in development
-const emailEnabled = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+const emailEnabled = config.smtp.enabled;
 if (!emailEnabled) {
   console.warn("Email service disabled: SMTP credentials not configured");
 }
 
-// Configure Nodemailer transport
+// Configure Nodemailer transport with proper TLS and timeout settings
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || "smtp.example.com",
-  port: Number.parseInt(process.env.SMTP_PORT || "587"),
-  secure: process.env.SMTP_SECURE === "true",
+  host: config.smtp.host,
+  port: config.smtp.port,
+  secure: config.smtp.secure, // true for port 465, false for 587
   auth: emailEnabled ? {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
+    user: config.smtp.user,
+    pass: config.smtp.pass,
   } : undefined,
+  connectionTimeout: config.smtp.connectionTimeout, // 5 seconds
+  socketTimeout: config.smtp.socketTimeout, // 5 seconds
 });
 
 // Function to safely send emails with error handling
@@ -35,10 +38,17 @@ const safeSendMail = async (mailOptions: any) => {
   }
 
   try {
-    await transporter.sendMail(mailOptions);
-    console.log(`Email sent successfully to ${mailOptions.to}`);
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`Email sent successfully to ${mailOptions.to} (Message ID: ${info.messageId})`);
   } catch (error: any) {
-    console.error(`Failed to send email to ${mailOptions.to}:`, error.message);
+    console.error(`Failed to send email to ${mailOptions.to}:`);
+    console.error(`  Error: ${error.message}`);
+    if (error.code) {
+      console.error(`  Code: ${error.code}`);
+    }
+    if (error.response) {
+      console.error(`  Response: ${error.response}`);
+    }
     // Don't throw the error to prevent breaking the main application flow
   }
 };
