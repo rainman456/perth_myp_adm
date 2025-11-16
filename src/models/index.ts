@@ -13,7 +13,7 @@ export * from './category'
 export * from './inventory'
 export * from './order'
 export * from './variant'
-
+export * from './announcement'
 
 
 // If you have more models (e.g., from your generic_repository.ts), add them here:
