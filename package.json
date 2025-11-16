@@ -8,6 +8,7 @@
     "start": "node --enable-source-maps dist/index.js",
     "start:prod": "NODE_ENV=production node --enable-source-maps dist/index.js",
     "seed": "ts-node src/seed.ts",
+    "email": "ts-node src/test-email.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "swagger:generate": "ts-node src/generate_swagger.ts",

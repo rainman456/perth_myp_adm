@@ -75,6 +75,7 @@ export const approveApplication = async (id: string, adminId: string) => {
   } catch (error) {
     console.error("Failed to send approval email:", error);
     // Continue with the process even if email fails
+    return { application: updatedApplication, merchant };
   }
   
   return { application: updatedApplication, merchant };
