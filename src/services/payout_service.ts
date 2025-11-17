@@ -403,7 +403,9 @@ export const getAllPayouts = async (filters?: {
   }
 
   if (filters?.status) {
-    query = query.where(eq(payouts.status, filters.status)) as any;
+    query = query.where(
+      eq(payouts.status, filters.status as any)
+    ) as any;
   }
 
   const results = await query.limit(filters?.limit || 100);

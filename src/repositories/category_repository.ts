@@ -41,14 +41,16 @@ export const deleteCategory = async (id: string) => {
 // src/repositories/category_repository.ts
 import { drizzle } from 'drizzle-orm/neon-serverless'; // Adjust if needed
 import { eq, desc,isNull } from 'drizzle-orm';
-import { categories } from '../models/category';
+import { categories ,getSlug} from '../models/category';
 import { db } from '../config/database'; // Centralized DB
 
 export class CategoryRepository {
-  async create(data: Omit<typeof categories.$inferInsert, 'createdAt'>): Promise<typeof categories.$inferSelect> {
-    const [newCat] = await db.insert(categories).values({ ...data, createdAt: new Date() }).returning();
+  async create(data: Omit<typeof categories.$inferInsert, 'createdAt' | 'categorySlug'>): Promise<typeof categories.$inferSelect> {
+    const slug = getSlug(data.name);
+    const [newCat] = await db.insert(categories).values({ ...data, categorySlug: slug, createdAt: new Date() }).returning();
     return newCat;
   }
+  
 
   async findById(id: number): Promise<typeof categories.$inferSelect | null> {
     const [cat] = await db.select().from(categories).where(eq(categories.id, id));

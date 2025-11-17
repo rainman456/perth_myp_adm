@@ -27,7 +27,7 @@ async function testSend() {
     console.log("Connection OK");
     const info = await transporter.sendMail({
       from: process.env.SMTP_FROM,
-      to: "simonlevi12@tutamail.com",  // Use a real email you control
+      to: "simonlevi453@gmail.com",  // Use a real email you control
       subject: "Test Email",
       text: "This is a test.",
     });
