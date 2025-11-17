@@ -92,109 +92,197 @@ export const aggregateEligiblePayouts = async () => {
 };
 
 export const processPayout = async (payoutId: string, adminId?: string) => {
-  return await db.transaction(async (tx) => {
-    const [payout] = await tx
-      .select()
-      .from(payouts)
-      .where(eq(payouts.id, payoutId));
+  try {
+    return await db.transaction(async (tx) => {
+      // 1. Fetch payout with better error handling
+      const [payout] = await tx
+        .select()
+        .from(payouts)
+        .where(eq(payouts.id, payoutId))
+        .limit(1);
 
-    if (!payout) throw new Error("Payout not found");
-    if (payout.status !== "pending")
-      throw new Error(`Payout status is ${payout.status}`);
+      if (!payout) {
+        logger.error(`Payout not found: ${payoutId}`);
+        throw new Error("Payout not found");
+      }
 
-    const [merchant] = await tx
-      .select()
-      .from(merchants)
-      .where(eq(merchants.id, payout.merchantId));
+      logger.info(`Processing payout: ${payoutId}, status: ${payout.status}`);
 
-    if (!merchant) throw new Error("Merchant not found");
+      if (payout.status !== "Pending") {
+        throw new Error(`Cannot process payout with status: ${payout.status}`);
+      }
 
-    // Fetch bank details to get recipient code
-    const [bankDetails] = await tx
-      .select()
-      .from(merchantBankDetails)
-      .where(eq(merchantBankDetails.merchantId, payout.merchantId));
+      // 2. Fetch merchant
+      const [merchant] = await tx
+        .select()
+        .from(merchants)
+        .where(eq(merchants.merchantId, payout.merchantId))
+        .limit(1);
 
-    if (!bankDetails?.recipientCode) {
-      throw new Error("No recipient code set for merchant in bank details");
-    }
+      if (!merchant) {
+        logger.error(`Merchant not found: ${payout.merchantId}`);
+        throw new Error("Merchant not found");
+      }
 
-    // Mark related splits as "processing"
-    await tx
-      .update(orderMerchantSplits)
-      .set({ status: "processing", updatedAt: new Date() })
-      .where(
-        and(
-          eq(orderMerchantSplits.merchantId, payout.merchantId),
-          eq(orderMerchantSplits.status, "payout_requested")
-        )
-      );
+      logger.info(`Found merchant: ${merchant.storeName}`);
 
-    // Initiate Paystack transfer
-    const transfer = await initiateTransfer({
-      source: "balance",
-      amount: Math.round(Number(payout.amount) * 100), // Convert to kobo
-      recipient: bankDetails.recipientCode,
-      reference: `payout_${payout.id}`,
-      reason: `Payout for ${merchant.storeName}`,
-    });
+      // 3. Fetch bank details
+      const [bankDetails] = await tx
+        .select()
+        .from(merchantBankDetails)
+        .where(eq(merchantBankDetails.merchantId, payout.merchantId))
+        .limit(1);
 
-    // Verify the transfer immediately
-    const verification = await verifyTransfer(transfer.reference);
+      if (!bankDetails?.recipientCode) {
+        logger.error(`No recipient code for merchant: ${payout.merchantId}`);
+        throw new Error("No recipient code set for merchant in bank details");
+      }
 
-    // Update payout based on verification status
-    const finalStatus = verification.status === "success" ? "completed" : "processing";
+      logger.info(`Using recipient code: ${bankDetails.recipientCode}`);
 
-    await tx
-      .update(payouts)
-      .set({
-        status: finalStatus,
-        paystackTransferId: transfer.transfer_code,
-        updatedAt: new Date(),
-      })
-      .where(eq(payouts.id, payoutId));
-
-    // If transfer is successful, update splits to "paid"
-    if (finalStatus === "completed") {
-      await tx
+      // 4. Mark related splits as "processing"
+      const updatedSplits = await tx
         .update(orderMerchantSplits)
-        .set({ status: "paid", updatedAt: new Date() })
+        .set({ status: "processing", updatedAt: new Date() })
         .where(
           and(
             eq(orderMerchantSplits.merchantId, payout.merchantId),
-            eq(orderMerchantSplits.status, "processing")
+            eq(orderMerchantSplits.status, "payout_requested")
           )
-        );
+        )
+        .returning();
 
-      // Update merchant totals
-      const newTotalPayouts = (
-        Number(merchant.totalPayouts || 0) + Number(payout.amount)
-      ).toFixed(2);
+      logger.info(`Marked ${updatedSplits.length} splits as processing`);
 
+      // 5. Validate amount before transfer
+      const amountInKobo = Math.round(Number(payout.amount) * 100);
+      if (isNaN(amountInKobo) || amountInKobo <= 0) {
+        logger.error(`Invalid payout amount: ${payout.amount}`);
+        throw new Error(`Invalid payout amount: ${payout.amount}`);
+      }
+
+      logger.info(`Initiating transfer of ₦${payout.amount} (${amountInKobo} kobo)`);
+
+      // 6. Initiate Paystack transfer with error handling
+      let transfer;
+      try {
+        transfer = await initiateTransfer({
+          source: "balance",
+          amount: amountInKobo,
+          recipient: bankDetails.recipientCode,
+          reference: `payout_${payout.id}`,
+          reason: `Payout for ${merchant.storeName}`,
+        });
+
+        logger.info(`Transfer initiated: ${transfer.transfer_code}`);
+      } catch (transferError: any) {
+        logger.error("Paystack transfer failed:", transferError);
+        
+        // Rollback splits to payout_requested
+        await tx
+          .update(orderMerchantSplits)
+          .set({ status: "payout_requested", updatedAt: new Date() })
+          .where(
+            and(
+              eq(orderMerchantSplits.merchantId, payout.merchantId),
+              eq(orderMerchantSplits.status, "processing")
+            )
+          );
+
+        // Mark payout as failed
+        await tx
+          .update(payouts)
+          .set({ 
+            status: "failed", 
+            updatedAt: new Date() 
+          })
+          .where(eq(payouts.id, payoutId));
+
+        throw new Error(`Transfer initiation failed: ${transferError.message}`);
+      }
+
+      // 7. Verify the transfer
+      let verification;
+      let finalStatus: "completed" | "processing" | "failed" = "processing";
+
+      try {
+        verification = await verifyTransfer(transfer.reference);
+        finalStatus = verification.status === "success" ? "completed" : "processing";
+        
+        logger.info(`Transfer verification: ${verification.status}`);
+      } catch (verifyError: any) {
+        logger.warn("Transfer verification failed, marking as processing:", verifyError);
+        // Keep as processing if verification fails
+        finalStatus = "processing";
+      }
+
+      // 8. Update payout status
       await tx
-        .update(merchants)
+        .update(payouts)
         .set({
-          totalPayouts: newTotalPayouts,
-          lastPayoutDate: new Date(),
+          status: finalStatus,
+          paystackTransferId: transfer.transfer_code,
           updatedAt: new Date(),
         })
-        .where(eq(merchants.id, payout.merchantId));
-    }
+        .where(eq(payouts.id, payoutId));
 
-    // Send notification email (with error handling)
-    try {
-      await sendPayoutNotificationEmail(
-        merchant.workEmail,
-        merchant.storeName,
-        Number(payout.amount)
-      );
-    } catch (error) {
-      logger.error("Failed to send payout notification email:", error);
-      // Continue with the process even if email fails
-    }
+      // 9. If transfer is successful, update splits to "paid"
+      if (finalStatus === "completed") {
+        await tx
+          .update(orderMerchantSplits)
+          .set({ status: "paid", updatedAt: new Date() })
+          .where(
+            and(
+              eq(orderMerchantSplits.merchantId, payout.merchantId),
+              eq(orderMerchantSplits.status, "processing")
+            )
+          );
 
-    return { payout: { ...payout, status: finalStatus }, transfer: transfer };
-  });
+        // 10. Update merchant totals
+        const currentTotalPayouts = Number(merchant.totalPayouts || 0);
+        const newTotalPayouts = (currentTotalPayouts + Number(payout.amount)).toFixed(2);
+
+        await tx
+          .update(merchants)
+          .set({
+            totalPayouts: newTotalPayouts,
+            lastPayoutDate: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(eq(merchants.id, payout.merchantId));
+
+        logger.info(`Updated merchant totals: ${newTotalPayouts}`);
+      }
+
+      // 11. Send notification email (non-blocking)
+      if (merchant.workEmail) {
+        try {
+          await sendPayoutNotificationEmail(
+            merchant.workEmail,
+            merchant.storeName,
+            Number(payout.amount)
+          );
+          logger.info(`Notification email sent to ${merchant.workEmail}`);
+        } catch (emailError: any) {
+          logger.error("Failed to send payout notification email:", emailError);
+          // Continue with the process even if email fails
+        }
+      }
+
+      const finalPayout = { ...payout, status: finalStatus, paystackTransferId: transfer.transfer_code };
+      
+      logger.info(`Payout processing completed: ${payoutId}, final status: ${finalStatus}`);
+
+      return { 
+        payout: finalPayout, 
+        transfer: transfer,
+        verification: verification 
+      };
+    });
+  } catch (error: any) {
+    logger.error(`Fatal error processing payout ${payoutId}:`, error);
+    throw error;
+  }
 };
 
 export const handleTransferWebhook = async (event: any) => {
