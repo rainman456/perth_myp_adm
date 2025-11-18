@@ -14,6 +14,14 @@ export * from './inventory'
 export * from './order'
 export * from './variant'
 export * from './announcement'
+export * from './order_item'
+export * from './payment'
+export * from './media'
+export * from './products'
+export * from './cart'
+export * from './cart_item'
+
+
 
 
 // If you have more models (e.g., from your generic_repository.ts), add them here:
