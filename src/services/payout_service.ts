@@ -4,6 +4,8 @@ import { payouts } from "../models/payout";
 import { orderMerchantSplits } from "../models/order_merchant_split";
 import { merchants } from "../models/merchant";
 import { logger } from "../utils/logger";
+import { settings } from "../models/settings";
+
 import {
   sendPayoutNotificationEmail,
   sendPayoutFailedEmail,
@@ -11,10 +13,25 @@ import {
 import { initiateTransfer, verifyTransfer } from "./paystack_service";
 import { merchantBankDetails } from "../models/bank_details";
 
+// Modify aggregateEligiblePayouts function
+
 export const aggregateEligiblePayouts = async () => {
   logger.info("Starting automatic payout aggregation...");
 
   try {
+    // GET GLOBAL SETTINGS FOR FEES
+    const [globalSettings] = await db
+      .select()
+      .from(settings)
+      .where(eq(settings.id, 'global'))
+      .limit(1);
+
+    if (!globalSettings) {
+      throw new Error("Global settings not found");
+    }
+
+    const platformFeeRate = Number(globalSettings.fees) / 100; // Convert to decimal
+    
     // Get all active merchants
     const activeMerchants = await db
       .select()
@@ -24,7 +41,9 @@ export const aggregateEligiblePayouts = async () => {
     const results = [];
 
     for (const merchant of activeMerchants) {
-      // Find eligible splits: status = 'payout_requested' and holdUntil has passed
+      // MODIFIED: Find eligible splits where:
+      // 1. status = 'payout_requested' 
+      // 2. holdUntil has passed (7 days after delivery)
       const eligibleSplits = await db
         .select()
         .from(orderMerchantSplits)
@@ -38,45 +57,62 @@ export const aggregateEligiblePayouts = async () => {
 
       if (eligibleSplits.length === 0) continue;
 
-      // Calculate total amount
-      const totalAmount = eligibleSplits.reduce(
+      // Calculate total amount BEFORE deductions
+      const grossAmount = eligibleSplits.reduce(
         (sum, split) => sum + Number(split.amountDue),
         0
       );
 
-      // Fetch bank details to get recipient code
+      // CALCULATE DEDUCTIONS
+      const merchantCommissionRate = Number(merchant.commissionRate) / 100;
+      const commissionAmount = grossAmount * merchantCommissionRate;
+      const platformFeeAmount = grossAmount * platformFeeRate;
+      const totalDeductions = commissionAmount + platformFeeAmount;
+      const netPayoutAmount = grossAmount - totalDeductions;
+
+      // Skip if net amount is <= 0
+      if (netPayoutAmount <= 0) {
+        logger.warn(
+          `Merchant ${merchant.id} net payout is ${netPayoutAmount}, skipping`
+        );
+        continue;
+      }
+
+      // Fetch bank details
       const [bankDetails] = await db
         .select()
         .from(merchantBankDetails)
         .where(eq(merchantBankDetails.merchantId, merchant.id));
 
-      // Check if merchant has recipient code in bank details
       if (!bankDetails?.recipientCode) {
         logger.warn(
-          `Merchant ${merchant.id} has no recipient code in bank details, skipping payout`
+          `Merchant ${merchant.id} has no recipient code, skipping payout`
         );
         continue;
       }
 
-      // Create payout record
+      // Create payout record with NET AMOUNT
       const [payout] = await db
         .insert(payouts)
         .values({
           merchantId: merchant.id,
-          amount: totalAmount.toFixed(2),
+          amount: netPayoutAmount.toFixed(2), // NET AMOUNT after deductions
           status: "pending",
           payoutAccountId: bankDetails.recipientCode,
         })
         .returning();
 
       logger.info(
-        `Created payout ${payout.id} for merchant ${merchant.storeName}: ${totalAmount}`
+        `Created payout ${payout.id} for ${merchant.storeName}: Gross: ${grossAmount}, Deductions: ${totalDeductions}, Net: ${netPayoutAmount}`
       );
 
       results.push({
         payoutId: payout.id,
         merchantId: merchant.id,
-        amount: totalAmount,
+        grossAmount,
+        commissionAmount,
+        platformFeeAmount,
+        netAmount: netPayoutAmount,
         splitsCount: eligibleSplits.length,
       });
     }
