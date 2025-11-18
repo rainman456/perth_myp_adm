@@ -391,3 +391,157 @@ export interface PaystackTransfer {
   reason?: string;
   reference?: string;
 }
+
+
+
+
+
+
+
+
+import fs from "fs/promises";
+import path from "path";
+//import { z } from "zod";
+
+
+
+
+export interface PaystackBank {
+  name: string;
+  code: string;
+  slug?: string | null;
+  // Paystack may include extra fields; keep them if present
+  [key: string]: any;
+}
+
+interface PaystackBanksResponse {
+  status: boolean;
+  message: string;
+  data: PaystackBank[];
+  meta?: any;
+}
+
+// --- optional small schema for country validation ---
+const allowedCountries = ["ghana", "kenya", "nigeria", "south africa"] as const;
+const countrySchema = z
+  .string()
+  .optional()
+  .refine((v) => !v || allowedCountries.includes(v as any), {
+    message: `country must be one of: ${allowedCountries.join(", ")}`,
+  });
+
+// default cache file (can be overridden in config.paystack.cacheFile)
+const DEFAULT_BANKS_CACHE = "banks.json";
+
+// helper: get cache path (prefer config.paystack.cacheFile)
+const getBanksCachePath = () => {
+  const cfgPath = (config.paystack && (config.paystack as any).cacheFile) || DEFAULT_BANKS_CACHE;
+  // resolve relative to project root
+  return path.resolve(process.cwd(), cfgPath);
+};
+
+// helper: atomic write (write to tmp then rename)
+async function atomicWriteFile(filePath: string, data: Buffer | string) {
+  const dir = path.dirname(filePath);
+  await fs.mkdir(dir, { recursive: true });
+  const tmpPath = `${filePath}.tmp`;
+  await fs.writeFile(tmpPath, data);
+  await fs.rename(tmpPath, filePath);
+}
+
+// Read banks from cache file (expects full Paystack response or array)
+async function readBanksFromCache(cachePath: string): Promise<PaystackBank[]> {
+  try {
+    const raw = await fs.readFile(cachePath, "utf8");
+    const parsed = JSON.parse(raw);
+
+    // If the file contains the full Paystack response object
+    if (parsed && Array.isArray(parsed.data)) {
+      return parsed.data as PaystackBank[];
+    }
+
+    // If the file is already an array of banks
+    if (Array.isArray(parsed)) {
+      return parsed as PaystackBank[];
+    }
+
+    // Unexpected shape
+    throw new Error("unexpected cache shape");
+  } catch (err) {
+    throw new Error(`failed to read banks cache: ${err instanceof Error ? err.message : String(err)}`);
+  }
+}
+
+/**
+ * getBanks - fetch list of banks from Paystack, cache result, fallback to cache on failure.
+ * @param country optional country filter (ghana|kenya|nigeria|south africa)
+ */
+export const getBanks = async (country?: string): Promise<PaystackBank[]> => {
+  // validate country if provided
+  try {
+    countrySchema.parse(country);
+  } catch (err) {
+    const msg = err instanceof z.ZodError ? err.errors.map((e) => e.message).join(", ") : "invalid country";
+    logger.error(`getBanks validation error: ${msg}`, err);
+    throw new Error(msg);
+  }
+
+  const cachePath = getBanksCachePath();
+
+  // If Paystack not configured, return mock result or cache fallback
+  if (!config.paystack?.secretKey || !config.paystack.enabled) {
+    logger.warn("Paystack not configured or disabled. Returning mock banks or cache if available.");
+    // try cache first
+    try {
+      const cached = await readBanksFromCache(cachePath);
+      return cached;
+    } catch (e) {
+      // return a small mock list
+      return [
+        { name: "Mock Bank", code: "000", slug: "mock-bank" },
+        { name: "Another Mock Bank", code: "001", slug: "another-mock" },
+      ];
+    }
+  }
+
+  // Build request URL
+  const params: Record<string, string> = {};
+  if (country) params.country = country;
+
+  try {
+    const resp = await paystackApi.get<PaystackBanksResponse>("/bank", { params });
+
+    if (!resp.data || resp.status !== 200) {
+      throw new Error(`unexpected response status ${resp.status}`);
+    }
+
+    if (!resp.data.status) {
+      // Paystack returned an error flag
+      throw new Error(`paystack error: ${resp.data.message}`);
+    }
+
+    // Save raw response to cache (so fallback can parse it). Non-fatal on failure.
+    try {
+      await atomicWriteFile(cachePath, JSON.stringify(resp.data, null, 2));
+    } catch (writeErr) {
+      logger.warn("Failed to write banks cache file", writeErr);
+      // continue — we still return the live data
+    }
+
+    return resp.data.data;
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    logger.error(`Failed to fetch banks from Paystack: ${errMsg}`);
+
+    // fallback to cache file
+    try {
+      const cached = await readBanksFromCache(cachePath);
+      logger.info("Loaded banks from cache after API failure");
+      return cached;
+    } catch (cacheErr) {
+      const cacheMsg = cacheErr instanceof Error ? cacheErr.message : String(cacheErr);
+      logger.error(`Failed to load banks from cache: ${cacheMsg}`);
+      throw new Error(`failed to fetch banks: ${errMsg}; cache error: ${cacheMsg}`);
+    }
+  }
+};

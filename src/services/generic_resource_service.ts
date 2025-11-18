@@ -19,19 +19,19 @@ const validationSchemas: Record<string, z.ZodSchema> = {
   //   status: z.enum(["active", "suspended"]).optional(),
   //   commissionRate: z.string().optional(),
   // }),
-  categories: z.object({
-    name: z.string().min(1).optional(),
-    parentId: z.string().optional(),
-  }),
+  // categories: z.object({
+  //   name: z.string().min(1).optional(),
+  //   parentId: z.string().optional(),
+  // }),
   products: z.object({
     name: z.string().min(1).optional(),
     basePrice: z.string().optional(),
     categoryId: z.number().optional(),
   }),
-  orders: z.object({
-    status: z.enum(["Pending", "Completed", "Cancelled"]).optional(),
-    currency: z.string().optional(),
-  }),
+  // orders: z.object({
+  //   status: z.enum(["Pending", "Completed", "Cancelled"]).optional(),
+  //   currency: z.string().optional(),
+  // }),
   announcements: z.object({
     title: z.string().min(1).optional(),
     content: z.string().min(1).optional(),

@@ -54,6 +54,8 @@ import  payoutRoutes from "./payout"
 //import authRoutes from "./auth"
 import { requireAdmin } from "../middleware/auth";
 import genericAdminRouter from "./generic_admin";
+import banksRoutes from "./banks.routes";
+
 //import { loggingMiddleware } from "../middleware/logging"
 //import { stripeWebhook } from "../utils/external"
 
@@ -68,6 +70,8 @@ export function registerRoutes(app: Express) {
   app.use("/api/returns", returnRoutes);
   app.use("/api/admin", genericAdminRouter);
   app.use("/api/payouts", requireAdmin, payoutRoutes)
+  app.use("/banks", banksRoutes);
+
 
   //app.post("/api/webhooks/stripe", stripeWebhook)
 
