@@ -5,6 +5,8 @@ import {
   decimal,
   varchar,
   timestamp,
+  index,
+  pgEnum,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { orders } from "./order";
@@ -12,23 +14,42 @@ import { products } from "./products";
 import { variants } from "./variant";
 import { merchants } from "./merchant";
 
-export const orderItems = pgTable("order_items", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  orderId: uuid("order_id").notNull(),
-  productId: uuid("product_id").notNull(),
-  variantId: uuid("variant_id").notNull(),
-  merchantId: uuid("merchant_id").notNull(),
-  quantity: integer("quantity").notNull(),
-  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
- // variantId: uuid("variant_id"),
-  fulfillmentStatus: varchar("fulfillment_status", { length: 20 })
-    .notNull()
-    .default("New"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
+export const fulfillmentStatusEnum = pgEnum('fulfillment_status', [
+  'Processing',
+  'Confirmed',
+  'Declined',
+  'SentToAronovaHub',
+  'Shipped',
+]);
 
-export const orderItemRelations = relations(orderItems, ({ one }) => ({
+
+export const orderItems = pgTable('order_items', {
+  id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+  orderId: integer('order_id')
+    .notNull()
+    .references(() => orders.id),
+  productId: uuid('product_id')
+    .notNull()
+    .references(() => products.id),
+  variantId: uuid('variant_id').references(() => variants.id),
+  merchantId: uuid('merchant_id')
+    .notNull()
+    .references(() => merchants.merchantId),
+  quantity: integer('quantity').notNull(),
+  price: decimal('price', { precision: 10, scale: 2 }).notNull(),
+  fulfillmentStatus: fulfillmentStatusEnum('fulfillment_status').notNull().default('Processing'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  deletedAt: timestamp('deleted_at'),
+}, (table) => ({
+  orderIdIdx: index('idx_orderitem_order_id').on(table.orderId),
+  productIdIdx: index('idx_orderitem_product_id').on(table.productId),
+  variantIdIdx: index('idx_orderitem_variant_id').on(table.variantId),
+  merchantIdIdx: index('idx_orderitem_merchant_id').on(table.merchantId),
+}));
+
+
+export const orderItemsRelations = relations(orderItems, ({ one }) => ({
   order: one(orders, {
     fields: [orderItems.orderId],
     references: [orders.id],
@@ -43,6 +64,6 @@ export const orderItemRelations = relations(orderItems, ({ one }) => ({
   }),
   merchant: one(merchants, {
     fields: [orderItems.merchantId],
-    references: [merchants.id],
+    references: [merchants.merchantId],
   }),
 }));

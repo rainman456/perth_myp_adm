@@ -11,6 +11,7 @@ import { relations } from "drizzle-orm";
 import { users } from "./users";
 import { orderItems } from "./order_item";
 import { payments } from "./payment";
+import { orderMerchantSplits } from "./order_merchant_split";
 
 export const orderStatusEnum = pgEnum('order_status', [
   'Pending',
@@ -38,11 +39,12 @@ export const orders = pgTable('orders', {
   deletedAt: timestamp('deleted_at'),
 });
 
-export const orderRelations = relations(orders, ({ many, one }) => ({
-  orderItems: many(orderItems),
-  payments: many(payments),
+export const ordersRelations = relations(orders, ({ one, many }) => ({
   user: one(users, {
     fields: [orders.userId],
     references: [users.id],
   }),
+  orderItems: many(orderItems),
+  payments: many(payments),
+  merchantSplits: many(orderMerchantSplits),
 }));

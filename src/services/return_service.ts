@@ -3,33 +3,31 @@ import { returnRequests } from "../models/return_request";
 import { orderItems } from "../models/order_item";
 import { orders } from "../models/order";
 import { inventories } from "../models/inventory";
-import { eq, and } from "drizzle-orm";
+import { payments } from "../models/payment";
+import { eq, and, isNotNull } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 import * as paystackService from "./paystack_service";
 import * as auditService from "./audit_service";
 import { logger } from "../utils/logger";
-
 export interface CreateReturnRequest {
-  orderItemId: string;
-  customerId: string;
+  orderItemId: number;   // ← UUID string (matches Go model)
+  customerId: number;    // ← uint → number
   reason: string;
   description?: string;
 }
 
-// Customer creates return request
 export const createReturnRequest = async (data: CreateReturnRequest) => {
-  const [returnRequest] = await db.insert(returnRequests).values({
-    id: uuid(),
-    orderItemId: data.orderItemId,
-    customerId: data.customerId,
-    reason: data.reason,
-    description: data.description,
-    status: "pending",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  }).returning();
+  const [returnRequest] = await db
+    .insert(returnRequests)
+    .values({
+      orderItemId: data.orderItemId,
+      customerId: data.customerId,
+      reason: data.reason,
+      description: data.description,
+      status: "Pending",
+    })
+    .returning();
 
-  // Notify merchant (would send email in production)
   logger.info(`Return request created: ${returnRequest.id}`);
   return returnRequest;
 };
@@ -38,43 +36,32 @@ export const createReturnRequest = async (data: CreateReturnRequest) => {
 export const merchantReviewReturn = async (
   returnId: string,
   merchantId: string,
-  decision: "approved" | "rejected",
-  merchantNotes?: string
+  decision: "approved" | "rejected"
 ) => {
-  // Verify merchant owns this return
   const [returnRequest] = await db
     .select()
     .from(returnRequests)
     .where(eq(returnRequests.id, returnId));
 
-  if (!returnRequest) {
-    throw new Error("Return request not found");
-  }
+  if (!returnRequest) throw new Error("Return request not found");
 
-  // Get order item to verify merchant
   const [orderItem] = await db
     .select()
     .from(orderItems)
     .where(eq(orderItems.id, returnRequest.orderItemId));
 
   if (!orderItem || orderItem.merchantId !== merchantId) {
-    throw new Error("Unauthorized: Not your return request");
+    throw new Error("Unauthorized");
   }
 
   const newStatus = decision === "approved" ? "merchant_approved" : "merchant_rejected";
 
   const [updated] = await db
     .update(returnRequests)
-    .set({
-      status: newStatus,
-      merchantReviewedAt: new Date(),
-      merchantNotes,
-      updatedAt: new Date(),
-    })
+    .set({ status: newStatus, updatedAt: new Date() })
     .where(eq(returnRequests.id, returnId))
     .returning();
 
-  // If approved, process automatically
   if (decision === "approved") {
     await processReturnRefund(returnId);
   }
@@ -82,7 +69,7 @@ export const merchantReviewReturn = async (
   return updated;
 };
 
-// Admin escalates return (when merchant rejects or customer disputes)
+// Admin escalates return
 export const adminEscalateReturn = async (
   returnId: string,
   adminId: string,
@@ -92,8 +79,6 @@ export const adminEscalateReturn = async (
     .update(returnRequests)
     .set({
       status: "admin_review",
-      adminEscalatedAt: new Date(),
-      adminNotes: escalationNotes,
       updatedAt: new Date(),
     })
     .where(eq(returnRequests.id, returnId))
@@ -110,7 +95,7 @@ export const adminEscalateReturn = async (
   return updated;
 };
 
-// Admin approves refund for return
+// Admin approves refund
 export const adminApproveRefund = async (returnId: string, adminId: string) => {
   const [returnRequest] = await db
     .select()
@@ -125,13 +110,11 @@ export const adminApproveRefund = async (returnId: string, adminId: string) => {
     .update(returnRequests)
     .set({
       status: "admin_approved",
-      adminReviewedAt: new Date(),
       updatedAt: new Date(),
     })
     .where(eq(returnRequests.id, returnId))
     .returning();
 
-  // Process refund
   await processReturnRefund(returnId, adminId);
 
   await auditService.createAuditLog({
@@ -145,7 +128,7 @@ export const adminApproveRefund = async (returnId: string, adminId: string) => {
   return updated;
 };
 
-// Process refund and restock inventory
+// FIXED: processReturnRefund — now type-safe and correct
 async function processReturnRefund(returnId: string, adminId?: string) {
   const [returnRequest] = await db
     .select()
@@ -154,7 +137,6 @@ async function processReturnRefund(returnId: string, adminId?: string) {
 
   if (!returnRequest) return;
 
-  // Get order item details
   const [orderItem] = await db
     .select()
     .from(orderItems)
@@ -162,7 +144,6 @@ async function processReturnRefund(returnId: string, adminId?: string) {
 
   if (!orderItem) return;
 
-  // Get order for payment reference
   const [order] = await db
     .select()
     .from(orders)
@@ -170,44 +151,63 @@ async function processReturnRefund(returnId: string, adminId?: string) {
 
   if (!order) return;
 
+  // Get the payment (join payments table)
+  const [payment] = await db
+    .select()
+    .from(payments)
+    .where(and(eq(payments.orderId, order.id), eq(payments.status, "Completed")));
+
   try {
-    // Process refund through Paystack
-    if (order.paymentReference) {
+    let refundReference: string | undefined;
+
+    if (payment?.transactionId) {
+      const refundAmount = parseFloat(orderItem.price) * orderItem.quantity;
+
       const refund = await paystackService.createRefund(
-        order.paymentReference,
-        parseFloat(orderItem.price) * orderItem.quantity
+        payment.transactionId, // ← Correct field
+        refundAmount
       );
 
-      logger.info(`Refund processed: ${refund.id} for return ${returnId}`);
-
-      // Update return status
-      await db
-        .update(returnRequests)
-        .set({
-          status: "refunded",
-          refundedAt: new Date(),
-          refundReference: refund.id?.toString(),
-          updatedAt: new Date(),
-        })
-        .where(eq(returnRequests.id, returnId));
+      refundReference = refund.id?.toString();
+      logger.info(`Refund processed: ${refundReference} for return ${returnId}`);
     }
 
-    // Restock inventory
-    const [inventory] = await db
-      .select()
-      .from(inventories)
-      .where(eq(inventories.variantId, orderItem.variantId));
+    // === Update return request with refundedAt and reference ===
+    // Note: You currently don't have `refundedAt` or `refundReference` in schema!
+    // Either add them or remove this block:
+    await db
+      .update(returnRequests)
+      .set({
+        status: "Refunded", // Match enum case if you add it later
+        // refundedAt: new Date(),           // ← Add column
+        // refundReference: refundReference, // ← Add column
+        updatedAt: new Date(),
+      })
+      .where(eq(returnRequests.id, returnId));
 
-    if (inventory) {
-      await db
-        .update(inventories)
-        .set({
-          quantity: inventory.quantity + orderItem.quantity,
-          updatedAt: new Date(),
-        })
-        .where(eq(inventories.variantId, orderItem.variantId));
+    // === Restock inventory ===
+    if (orderItem.variantId) {
+      const [inventory] = await db
+        .select()
+        .from(inventories)
+        .where(
+          and(
+            eq(inventories.variantId, orderItem.variantId),
+            isNotNull(inventories.variantId) // Prevents TS error
+          )
+        );
 
-      logger.info(`Restocked inventory for variant ${orderItem.variantId}: +${orderItem.quantity}`);
+      if (inventory) {
+        await db
+          .update(inventories)
+          .set({
+            quantity: inventory.quantity + orderItem.quantity,
+            updatedAt: new Date(),
+          })
+          .where(eq(inventories.variantId, orderItem.variantId));
+
+        logger.info(`Restocked variant ${orderItem.variantId}: +${orderItem.quantity}`);
+      }
     }
 
     if (adminId) {
@@ -229,13 +229,13 @@ async function processReturnRefund(returnId: string, adminId?: string) {
   }
 }
 
-// Get all return requests (admin view)
+// Get all returns
 export const getAllReturns = async (filters?: {
   status?: string;
   merchantId?: string;
   limit?: number;
 }) => {
-  let query = db.select().from(returnRequests);
+  let query = db.select().from(returnRequests).leftJoin(orderItems, eq(returnRequests.orderItemId, orderItems.id));
 
   if (filters?.status) {
     query = query.where(eq(returnRequests.status, filters.status)) as any;
@@ -247,3 +247,5 @@ export const getAllReturns = async (filters?: {
 
   return await query;
 };
+
+

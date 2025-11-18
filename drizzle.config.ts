@@ -9,7 +9,7 @@ export default defineConfig({
   //schema: "./src/models/*.ts", // Updated to multiple files
   schema: [
    
-    "./src/models/payout.ts",
+    "./src/models/settings.ts",
   ],
   dialect: "postgresql",
   dbCredentials: {
