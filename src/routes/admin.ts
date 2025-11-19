@@ -34,35 +34,35 @@ router.patch(
 
 
 router.get(
-  "/admins/order/:id",
+  "/order/:id",
   requirePermission(Permission.VIEW_ORDERS),
   orderController.getOrder
 );
 
 // Cancel order (with refund and restock)
 router.post(
-  "/admins/order/:id/cancel",
+  "/order/:id/cancel",
   requirePermission(Permission.REFUND_ORDERS),
   orderController.cancelOrder
 );
 
 // Update single order item fulfillment status
 router.patch(
-  "/admins/order/:id/items/:itemId/fulfillment",
+  "/order/:id/items/:itemId/fulfillment",
   requirePermission(Permission.EDIT_ORDERS),
   orderController.updateItemFulfillment
 );
 
 // Bulk update order items fulfillment
 router.patch(
-  "/admins/order/:id/items/bulk-fulfillment",
+  "/order/:id/items/bulk-fulfillment",
   requirePermission(Permission.EDIT_ORDERS),
   orderController.bulkUpdateItemsFulfillment
 );
 
 // Mark entire order as delivered
 router.post(
-  "/admins/order/:id/mark-delivered",
+  "/order/:id/mark-delivered",
   requirePermission(Permission.EDIT_ORDERS),
   orderController.markOrderDelivered
 );
