@@ -167,7 +167,7 @@ export const updateItemFulfillment = async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Status is required" });
   }
 
-  const validStatuses = ["Processing", "Confirmed", "Declined", "Shipped"];
+  const validStatuses = ["Processing" , "Confirmed" , "Declined" , "SentToAronovaHub" , "OutForDelivery" ,"Delivered"];
   if (!validStatuses.includes(status)) {
     return res.status(400).json({
       error: `Invalid status. Must be one of: ${validStatuses.join(", ")}`,
