@@ -37,6 +37,15 @@ const transferSchema = z.object({
   reference: z.string().optional(),
 });
 
+// Input validation schema for refund
+const refundSchema = z.object({
+  transaction: z.string().min(1, "Transaction reference is required"),
+  amount: z.number().positive("Amount must be positive").optional(), // Amount in kobo before multiplication
+  currency: z.enum(["NGN"]).optional(),
+  customer_note: z.string().optional(),
+  merchant_note: z.string().optional(),
+});
+
 // Response interfaces based on Paystack documentation
 interface PaystackTransferRecipientResponse {
   status: boolean;
@@ -92,7 +101,80 @@ interface PaystackVerifyTransferResponse {
   };
 }
 
+interface PaystackCreateRefundResponse {
+  status: boolean;
+  message: string;
+  data: {
+    transaction: {
+      id: number;
+      domain: string;
+      reference: string;
+      amount: number;
+      paid_at: string; // ISO date string
+      channel: string;
+      currency: string;
+      authorization: {
+        exp_month: number | null;
+        exp_year: number | null;
+        account_name: string | null;
+      };
+      customer: {
+        international_format_phone: string | null;
+      };
+      plan: Record<string, unknown>; // Empty object in sample
+      subaccount: {
+        currency: string | null;
+      };
+      split: Record<string, unknown>; // Empty object in sample
+      order_id: string | null;
+      paidAt: string; // ISO date string
+      pos_transaction_data: unknown | null;
+      source: unknown | null;
+      fees_breakdown: unknown | null;
+    };
+    integration: number;
+    deducted_amount: number;
+    channel: string | null;
+    merchant_note: string;
+    customer_note: string;
+    status: string; // e.g., "pending", "processed", "processing"
+    refunded_by: string;
+    expected_at: string; // ISO date string
+    currency: string;
+    domain: string;
+    amount: number;
+    fully_deducted: boolean;
+    id: number;
+    createdAt: string; // ISO date string
+    updatedAt: string; // ISO date string
+  };
+}
 
+interface PaystackFetchRefundResponse {
+  status: boolean;
+  message: string;
+  data: {
+    integration: number;
+    transaction: number;
+    dispute: number | null;
+    settlement: unknown | null;
+    domain: string;
+    amount: number;
+    deducted_amount: number;
+    fully_deducted: boolean;
+    currency: string;
+    channel: string;
+    status: string; // e.g., "processed", "pending"
+    refunded_by: string;
+    refunded_at: string; // ISO date string
+    expected_at: string; // ISO date string
+    customer_note: string;
+    merchant_note: string;
+    id: number;
+    createdAt: string; // ISO date string
+    updatedAt: string; // ISO date string
+  };
+}
 
 export const resolveAccountNumber = async (accountNumber: string, bankCode: string) => {
   try {
@@ -259,26 +341,82 @@ export const verifyTransfer = async (
   }
 };
 
-// Create refund (kept for completeness)
+// Create refund
 export const createRefund = async (
   transactionReference: string,
-  amount?: number
-): Promise<{ id: string; status: string }> => {
+  amount?: number,
+  currency?: string,
+  customer_note?: string,
+  merchant_note?: string
+): Promise<PaystackCreateRefundResponse["data"]> => {
   if (!config.paystack?.secretKey || !config.paystack.enabled) {
     logger.warn("Paystack not configured, returning mock refund");
-    return { id: `mock-refund-${Date.now()}`, status: "success" };
+    return {
+      id: Math.floor(Math.random() * 1000000),
+      integration: 0,
+      domain: "test",
+      amount: amount || 10000,
+      deducted_amount: 0,
+      channel: null,
+      merchant_note: merchant_note || "Mock merchant note",
+      customer_note: customer_note || "Mock customer note",
+      status: "pending",
+      refunded_by: "mock@user.com",
+      expected_at: new Date(Date.now() + 86400000).toISOString(), // 1 day later
+      currency: currency || "NGN",
+      fully_deducted: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      transaction: {
+        id: Math.floor(Math.random() * 1000000),
+        domain: "test",
+        reference: transactionReference,
+        amount: amount || 10000,
+        paid_at: new Date().toISOString(),
+        channel: "mock",
+        currency: currency || "NGN",
+        authorization: {
+          exp_month: null,
+          exp_year: null,
+          account_name: null,
+        },
+        customer: {
+          international_format_phone: null,
+        },
+        plan: {},
+        subaccount: {
+          currency: null,
+        },
+        split: {},
+        order_id: null,
+        paidAt: new Date().toISOString(),
+        pos_transaction_data: null,
+        source: null,
+        fees_breakdown: null,
+      },
+    };
   }
 
   try {
+    // Validate input
+    const input = {
+      transaction: transactionReference,
+      amount,
+      currency,
+      customer_note,
+      merchant_note,
+    };
+    const validated = refundSchema.parse(input);
+
+    // Prepare payload with amount in kobo
     const payload = {
-      transaction: z
-        .string()
-        .min(1, "Transaction reference is required")
-        .parse(transactionReference),
-      amount: amount ? z.number().positive().parse(amount * 100) : undefined, // Convert to kobo
+      ...validated,
+      amount: validated.amount ? validated.amount * 100 : undefined,
     };
 
-    const response = await paystackApi.post("/refund", payload);
+    // Make API call to Paystack
+    const response = await paystackApi.post<PaystackCreateRefundResponse>("/refund", payload);
+
     if (!response.data.status) {
       throw new Error(`Paystack API error: ${response.data.message}`);
     }
@@ -292,6 +430,60 @@ export const createRefund = async (
         : error instanceof Error
         ? `Paystack error: ${error.message}`
         : "Unknown error creating refund";
+    logger.error(errorMessage, error);
+    throw new Error(errorMessage);
+  }
+};
+
+// Fetch refund (verify refund status)
+export const fetchRefund = async (
+  refundId: number
+): Promise<PaystackFetchRefundResponse["data"]> => {
+  if (!config.paystack?.secretKey || !config.paystack.enabled) {
+    logger.warn("Paystack not configured, returning mock refund fetch");
+    return {
+      id: refundId,
+      integration: 0,
+      transaction: Math.floor(Math.random() * 1000000),
+      dispute: null,
+      settlement: null,
+      domain: "test",
+      amount: 10000,
+      deducted_amount: 0,
+      fully_deducted: false,
+      currency: "NGN",
+      channel: "mock",
+      status: "processed",
+      refunded_by: "mock@user.com",
+      refunded_at: new Date().toISOString(),
+      expected_at: new Date().toISOString(),
+      customer_note: "Mock customer note",
+      merchant_note: "Mock merchant note",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  try {
+    // Validate input
+    z.number().positive("Refund ID must be a positive number").parse(refundId);
+
+    // Make API call to Paystack
+    const response = await paystackApi.get<PaystackFetchRefundResponse>(`/refund/${refundId}`);
+
+    if (!response.data.status) {
+      throw new Error(`Paystack API error: ${response.data.message}`);
+    }
+
+    logger.info(`Fetched Paystack refund: ${response.data.data.id}`);
+    return response.data.data;
+  } catch (error) {
+    const errorMessage =
+      error instanceof z.ZodError
+        ? `Validation error: ${error.errors.map((e) => e.message).join(", ")}`
+        : error instanceof Error
+        ? `Paystack error: ${error.message}`
+        : "Unknown error fetching refund";
     logger.error(errorMessage, error);
     throw new Error(errorMessage);
   }
@@ -392,19 +584,9 @@ export interface PaystackTransfer {
   reference?: string;
 }
 
-
-
-
-
-
-
-
 import fs from "fs/promises";
 import path from "path";
 //import { z } from "zod";
-
-
-
 
 export interface PaystackBank {
   name: string;

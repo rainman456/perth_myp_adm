@@ -1,5 +1,7 @@
 import { Router } from "express";
 import * as adminController from "../controllers/admin";
+import * as orderController from "../controllers/order_controller";
+
 import { requireAdmin } from "../middleware/auth";
 import { requirePermission, requireSuperAdmin } from "../middleware/rbac";
 import { Permission } from "../types/roles";
@@ -27,6 +29,42 @@ router.patch(
   "/admins/:id/role",
   requireSuperAdmin,
   adminController.updateAdminRole
+);
+
+
+
+router.get(
+  "/:id",
+  requirePermission(Permission.VIEW_ORDERS),
+  orderController.getOrder
+);
+
+// Cancel order (with refund and restock)
+router.post(
+  "/:id/cancel",
+  requirePermission(Permission.REFUND_ORDERS),
+  orderController.cancelOrder
+);
+
+// Update single order item fulfillment status
+router.patch(
+  "/:id/items/:itemId/fulfillment",
+  requirePermission(Permission.EDIT_ORDERS),
+  orderController.updateItemFulfillment
+);
+
+// Bulk update order items fulfillment
+router.patch(
+  "/:id/items/bulk-fulfillment",
+  requirePermission(Permission.EDIT_ORDERS),
+  orderController.bulkUpdateItemsFulfillment
+);
+
+// Mark entire order as delivered
+router.post(
+  "/:id/mark-delivered",
+  requirePermission(Permission.EDIT_ORDERS),
+  orderController.markOrderDelivered
 );
 
 export default router;

@@ -19,9 +19,9 @@ export const fulfillmentStatusEnum = pgEnum('fulfillment_status', [
   'Confirmed',
   'Declined',
   'SentToAronovaHub',
-  'Shipped',
+  'OutForDelivery',
+  'Delivered',  // ← ADD THIS
 ]);
-
 
 export const orderItems = pgTable('order_items', {
   id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
