@@ -36,6 +36,82 @@ const MODELS = {
 
 type ModelName = keyof typeof MODELS;
 
+
+
+
+
+// Define relationships for each model (what to include)
+const MODEL_RELATIONS: Record<string, string[]> = {
+  orders: ['orderItems'],
+  orderItems: ['order', 'product', 'variant', 'merchant'],
+  // merchants: ['products', 'orderItems'],
+  // products: ['variants', 'category', 'merchant', 'medias'],
+  // carts: ['cartItems', 'user'],
+  // cartItems: ['cart', 'product', 'variant'],
+  // disputes: ['order', 'customer', 'merchant'],
+  // returnRequests: ['orderItem', 'customer'],
+  // payouts: ['merchant'],
+  // users: ['orders', 'carts'],
+  // Use camelCase keys here
+};
+
+
+
+
+const MODEL_NAME_MAP: Record<string, string> = {
+  cart_items: 'cartItems',
+  order_items: 'orderItems',
+  order_merchant_splits: 'orderMerchantSplits',
+  bank_details: 'merchantBankDetails',
+  return_requests: 'returnRequests',
+  // Add other snake_case names as needed
+};
+
+
+
+
+/**
+ * Get camelCase model name for db.query API
+ */
+const getQueryModelName = (modelName: string): string => {
+  const normalized = normalizeModelName(modelName);
+  return MODEL_NAME_MAP[normalized] || normalized;
+};
+
+
+
+/**
+ * Get relations config for a model
+ */
+const getModelRelations = (modelName: string): Record<string, boolean> | undefined => {
+  const relations = MODEL_RELATIONS[modelName];
+  if (!relations || relations.length === 0) return undefined;
+  
+  // Convert array to object: ['orderItems', 'user'] => { orderItems: true, user: true }
+  return relations.reduce((acc, rel) => {
+    acc[rel] = true;
+    return acc;
+  }, {} as Record<string, boolean>);
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /**
  * Get model by name with type safety
  */
@@ -81,6 +157,54 @@ const excludeSoftDeleted = (model: any): SQL | undefined => {
 /**
  * List records with filtering and pagination
  */
+// export const listRecords = async (
+//   modelName: string,
+//   filters?: Record<string, any>,
+//   limit = 50,
+//   offset = 0
+// ) => {
+//   const model = getModel(normalizeModelName(modelName));
+//   const conditions: SQL[] = [];
+
+//   // Add soft delete filter if applicable
+//   const softDeleteFilter = excludeSoftDeleted(model);
+//   if (softDeleteFilter) {
+//     conditions.push(softDeleteFilter);
+//   }
+
+//   // Add user filters
+//   if (filters) {
+//     Object.entries(filters).forEach(([key, value]) => {
+//       if (value === undefined || value === null) return;
+
+//       const column = (model as any)[key];
+//       if (!column) {
+//         console.warn(`Field '${key}' not found in model '${modelName}'`);
+//         return;
+//       }
+
+//       if (typeof value === "string" && value.includes("%")) {
+//         conditions.push(like(column, value));
+//       } else if (Array.isArray(value)) {
+//         conditions.push(inArray(column, value));
+//       } else {
+//         conditions.push(eq(column, value));
+//       }
+//     });
+//   }
+
+//   let query = db.select().from(model);
+//   if (conditions.length > 0) {
+//     query = query.where(and(...conditions)) as any;
+//   }
+
+//   return await query.limit(limit).offset(offset);
+// };
+
+
+
+
+
 export const listRecords = async (
   modelName: string,
   filters?: Record<string, any>,
@@ -88,6 +212,7 @@ export const listRecords = async (
   offset = 0
 ) => {
   const model = getModel(normalizeModelName(modelName));
+  const queryModelName = getQueryModelName(modelName); // Get camelCase name
   const conditions: SQL[] = [];
 
   // Add soft delete filter if applicable
@@ -117,13 +242,29 @@ export const listRecords = async (
     });
   }
 
-  let query = db.select().from(model);
-  if (conditions.length > 0) {
-    query = query.where(and(...conditions)) as any;
-  }
+  // Get relations config
+  const relations = getModelRelations(queryModelName); // Use camelCase name
 
-  return await query.limit(limit).offset(offset);
+  // Build query with relations
+  const query = await (db.query as any)[queryModelName].findMany({
+    where: conditions.length > 0 ? and(...conditions) : undefined,
+    limit,
+    offset,
+    with: relations,
+  });
+
+  return await query;
 };
+
+
+
+
+
+
+
+
+
+
 
 /**
  * Get record count for pagination
@@ -242,11 +383,41 @@ export const createRecord = async <T extends AnyPgTable>(
 /**
  * Get a single record by ID
  */
+// export const getRecord = async <T extends AnyPgTable>(
+//   modelName: string,
+//   id: string
+// ): Promise<T['_']['columns'] | null> => {
+//   const model = getModel(normalizeModelName(modelName));
+//   const idColumn = (model as any).id;
+
+//   if (!idColumn) {
+//     throw new Error(`Model '${modelName}' does not have an id column`);
+//   }
+
+//   const conditions: SQL[] = [eq(idColumn, id)];
+
+//   const softDeleteFilter = excludeSoftDeleted(model);
+//   if (softDeleteFilter) {
+//     conditions.push(softDeleteFilter);
+//   }
+
+//   const result = await db
+//     .select()
+//     .from(model)
+//     .where(and(...conditions));
+
+//   return (result[0] || null) as T['_']['columns'] | null;
+// };
+
+
+
 export const getRecord = async <T extends AnyPgTable>(
   modelName: string,
   id: string
 ): Promise<T['_']['columns'] | null> => {
-  const model = getModel(normalizeModelName(modelName));
+  const normalizedName = normalizeModelName(modelName);
+  const queryModelName = getQueryModelName(modelName); // Get camelCase name
+  const model = getModel(normalizedName);
   const idColumn = (model as any).id;
 
   if (!idColumn) {
@@ -260,13 +431,21 @@ export const getRecord = async <T extends AnyPgTable>(
     conditions.push(softDeleteFilter);
   }
 
-  const result = await db
-    .select()
-    .from(model)
-    .where(and(...conditions));
+  // Get relations config
+  const relations = getModelRelations(queryModelName); // Use camelCase name
 
-  return (result[0] || null) as T['_']['columns'] | null;
+  // Use query API for relations support
+  const result = await (db.query as any)[queryModelName].findFirst({
+    where: and(...conditions),
+    with: relations,
+  });
+
+  return (result || null) as T['_']['columns'] | null;
 };
+
+
+
+
 
 /**
  * Update a record
