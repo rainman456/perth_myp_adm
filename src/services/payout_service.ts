@@ -5,12 +5,17 @@ import { orderMerchantSplits } from "../models/order_merchant_split";
 import { merchants } from "../models/merchant";
 import { logger } from "../utils/logger";
 import { settings } from "../models/settings";
+//import { merchantBankDetails } from "../models/bank_details";
 
 import {
   sendPayoutNotificationEmail,
   sendPayoutFailedEmail,
 } from "../utils/email";
-import { initiateTransfer, verifyTransfer } from "./paystack_service";
+import {
+  createTransferRecipient,
+  initiateTransfer,
+  verifyTransfer,
+} from "./paystack_service";
 import { merchantBankDetails } from "../models/bank_details";
 
 // Modify aggregateEligiblePayouts function
@@ -23,7 +28,7 @@ export const aggregateEligiblePayouts = async () => {
     const [globalSettings] = await db
       .select()
       .from(settings)
-      .where(eq(settings.id, 'global'))
+      .where(eq(settings.id, "global"))
       .limit(1);
 
     if (!globalSettings) {
@@ -31,7 +36,7 @@ export const aggregateEligiblePayouts = async () => {
     }
 
     const platformFeeRate = Number(globalSettings.fees) / 100; // Convert to decimal
-    
+
     // Get all active merchants
     const activeMerchants = await db
       .select()
@@ -42,7 +47,7 @@ export const aggregateEligiblePayouts = async () => {
 
     for (const merchant of activeMerchants) {
       // MODIFIED: Find eligible splits where:
-      // 1. status = 'payout_requested' 
+      // 1. status = 'payout_requested'
       // 2. holdUntil has passed (7 days after delivery)
       const eligibleSplits = await db
         .select()
@@ -163,26 +168,100 @@ export const processPayout = async (payoutId: string, adminId?: string) => {
       logger.info(`Found merchant: ${merchant.storeName}`);
 
       // 3. Fetch bank details
-      const [bankDetails] = await tx
+      // 3. Fetch bank details
+      let [bankDetails] = await tx
         .select()
         .from(merchantBankDetails)
-        .where(eq(merchantBankDetails.merchantId, payout.merchantId))
+        .where(eq(merchantBankDetails.merchantId, merchant.merchantId))
         .limit(1);
 
-      if (!bankDetails?.recipientCode) {
-        logger.error(`No recipient code for merchant: ${payout.merchantId}`);
-        throw new Error("No recipient code set for merchant in bank details");
+      if (!bankDetails) {
+        logger.error(
+          `No bank details found for merchant: ${merchant.merchantId}`
+        );
+        throw new Error("No bank details configured for merchant");
+      }
+
+      // 4. Check if recipient code exists, if not create one
+      // 4. Check if recipient code exists, if not create one
+      if (!bankDetails.recipientCode) {
+        logger.info(
+          `No recipient code found, creating one for merchant: ${merchant.storeName}`
+        );
+
+        // Validate bank details before attempting to create recipient
+        if (
+          !bankDetails.accountName ||
+          !bankDetails.accountNumber ||
+          !bankDetails.bankCode
+        ) {
+          logger.error("Incomplete bank details:", {
+            merchantId: merchant.merchantId,
+            accountName: bankDetails.accountName,
+            accountNumber: bankDetails.accountNumber,
+            bankCode: bankDetails.bankCode,
+          });
+          throw new Error(
+            "Incomplete bank details: missing account name, number, or bank code"
+          );
+        }
+
+        // Validate account number format
+        if (!/^\d{10}$/.test(bankDetails.accountNumber)) {
+          logger.error(
+            `Invalid account number format: ${bankDetails.accountNumber}`
+          );
+          throw new Error(`Invalid account number: must be exactly 10 digits`);
+        }
+
+        // Validate bank code format
+        if (!/^\d{3,6}$/.test(bankDetails.bankCode)) {
+          logger.error(`Invalid bank code format: ${bankDetails.bankCode}`);
+          throw new Error(`Invalid bank code: must be 3-6 digits`);
+        }
+
+        try {
+          // Create transfer recipient on Paystack
+          const recipient = await createTransferRecipient({
+            type: "nuban",
+            name: bankDetails.accountName.trim(),
+            account_number: bankDetails.accountNumber.trim(),
+            bank_code: bankDetails.bankCode.trim(),
+            currency: bankDetails.currency || "NGN",
+          });
+
+          // Update bank details with recipient code
+          const [updatedBankDetails] = await tx
+            .update(merchantBankDetails)
+            .set({
+              recipientCode: recipient.recipient_code,
+              updatedAt: new Date(),
+            })
+            .where(eq(merchantBankDetails.merchantId, merchant.merchantId))
+            .returning();
+
+          bankDetails = updatedBankDetails;
+
+          logger.info(
+            `Created and saved recipient code: ${recipient.recipient_code}`
+          );
+        } catch (recipientError: any) {
+          logger.error("Failed to create transfer recipient:", recipientError);
+          throw new Error(
+            `Failed to create transfer recipient: ${recipientError.message}`
+          );
+        }
       }
 
       logger.info(`Using recipient code: ${bankDetails.recipientCode}`);
 
-      // 4. Mark related splits as "processing"
+      // 5. Mark related splits as "processing"
       const updatedSplits = await tx
         .update(orderMerchantSplits)
         .set({ status: "processing", updatedAt: new Date() })
         .where(
           and(
-            eq(orderMerchantSplits.merchantId, payout.merchantId),
+            eq(orderMerchantSplits.merchantId, merchant.id),
             eq(orderMerchantSplits.status, "payout_requested")
           )
         )
@@ -191,21 +270,32 @@ export const processPayout = async (payoutId: string, adminId?: string) => {
       logger.info(`Marked ${updatedSplits.length} splits as processing`);
 
       // 5. Validate amount before transfer
+      // 6. Validate amount and recipient code before transfer
       const amountInKobo = Math.round(Number(payout.amount) * 100);
       if (isNaN(amountInKobo) || amountInKobo <= 0) {
         logger.error(`Invalid payout amount: ${payout.amount}`);
         throw new Error(`Invalid payout amount: ${payout.amount}`);
       }
 
-      logger.info(`Initiating transfer of ₦${payout.amount} (${amountInKobo} kobo)`);
+      // Final check for recipient code (should exist after creation step)
+      if (!bankDetails.recipientCode) {
+        logger.error(
+          `No recipient code available for merchant: ${merchant.merchantId}`
+        );
+        throw new Error("No recipient code available after creation attempt");
+      }
 
-      // 6. Initiate Paystack transfer with error handling
+      logger.info(
+        `Initiating transfer of ₦${payout.amount} (${amountInKobo} kobo)`
+      );
+
+      // 7. Initiate Paystack transfer with error handling
       let transfer;
       try {
         transfer = await initiateTransfer({
           source: "balance",
           amount: amountInKobo,
-          recipient: bankDetails.recipientCode,
+          recipient: bankDetails.recipientCode, // TypeScript now knows this is not null
           reference: `payout_${payout.id}`,
           reason: `Payout for ${merchant.storeName}`,
         });
@@ -213,14 +303,14 @@ export const processPayout = async (payoutId: string, adminId?: string) => {
         logger.info(`Transfer initiated: ${transfer.transfer_code}`);
       } catch (transferError: any) {
         logger.error("Paystack transfer failed:", transferError);
-        
+
         // Rollback splits to payout_requested
         await tx
           .update(orderMerchantSplits)
           .set({ status: "payout_requested", updatedAt: new Date() })
           .where(
             and(
-              eq(orderMerchantSplits.merchantId, payout.merchantId),
+              eq(orderMerchantSplits.merchantId, merchant.id),
               eq(orderMerchantSplits.status, "processing")
             )
           );
@@ -228,9 +318,9 @@ export const processPayout = async (payoutId: string, adminId?: string) => {
         // Mark payout as failed
         await tx
           .update(payouts)
-          .set({ 
-            status: "failed", 
-            updatedAt: new Date() 
+          .set({
+            status: "failed",
+            updatedAt: new Date(),
           })
           .where(eq(payouts.id, payoutId));
 
@@ -243,11 +333,15 @@ export const processPayout = async (payoutId: string, adminId?: string) => {
 
       try {
         verification = await verifyTransfer(transfer.reference);
-        finalStatus = verification.status === "success" ? "completed" : "processing";
-        
+        finalStatus =
+          verification.status === "success" ? "completed" : "processing";
+
         logger.info(`Transfer verification: ${verification.status}`);
       } catch (verifyError: any) {
-        logger.warn("Transfer verification failed, marking as processing:", verifyError);
+        logger.warn(
+          "Transfer verification failed, marking as processing:",
+          verifyError
+        );
         // Keep as processing if verification fails
         finalStatus = "processing";
       }
@@ -276,7 +370,9 @@ export const processPayout = async (payoutId: string, adminId?: string) => {
 
         // 10. Update merchant totals
         const currentTotalPayouts = Number(merchant.totalPayouts || 0);
-        const newTotalPayouts = (currentTotalPayouts + Number(payout.amount)).toFixed(2);
+        const newTotalPayouts = (
+          currentTotalPayouts + Number(payout.amount)
+        ).toFixed(2);
 
         await tx
           .update(merchants)
@@ -305,14 +401,20 @@ export const processPayout = async (payoutId: string, adminId?: string) => {
         }
       }
 
-      const finalPayout = { ...payout, status: finalStatus, paystackTransferId: transfer.transfer_code };
-      
-      logger.info(`Payout processing completed: ${payoutId}, final status: ${finalStatus}`);
+      const finalPayout = {
+        ...payout,
+        status: finalStatus,
+        paystackTransferId: transfer.transfer_code,
+      };
 
-      return { 
-        payout: finalPayout, 
+      logger.info(
+        `Payout processing completed: ${payoutId}, final status: ${finalStatus}`
+      );
+
+      return {
+        payout: finalPayout,
         transfer: transfer,
-        verification: verification 
+        verification: verification,
       };
     });
   } catch (error: any) {
@@ -439,9 +541,7 @@ export const getAllPayouts = async (filters?: {
   }
 
   if (filters?.status) {
-    query = query.where(
-      eq(payouts.status, filters.status as any)
-    ) as any;
+    query = query.where(eq(payouts.status, filters.status as any)) as any;
   }
 
   const results = await query.limit(filters?.limit || 100);

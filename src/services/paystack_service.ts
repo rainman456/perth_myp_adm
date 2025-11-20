@@ -14,16 +14,20 @@ const paystackApi = axios.create({
 });
 
 // Input validation schema for transfer recipient
+// Input validation schema for transfer recipient
 const transferRecipientSchema = z.object({
   type: z.enum(["nuban", "mobile_money"]),
-  name: z.string().min(1, "Recipient name is required"),
+  name: z.string().min(1, "Recipient name is required").max(50, "Name too long"),
   account_number: z
     .string()
-    .regex(/^\d{10}$/, "Account number must be a 10-digit number"), // NUBAN is typically 10 digits
+    .min(10, "Account number must be at least 10 digits")
+    .max(10, "Account number must be exactly 10 digits")
+    .regex(/^\d+$/, "Account number must contain only digits"),
   bank_code: z
     .string()
-    .regex(/^\d{3}$/, "Bank code must be a 3-digit code"), // Paystack bank codes are 3 digits
-  currency: z.enum(["NGN"]).optional().default("NGN"), // Default to NGN
+    .min(3, "Bank code must be at least 3 characters")
+    .max(6, "Bank code must be at most 6 characters"),
+  currency: z.string().optional().default("NGN"),
 });
 
 // Input validation schema for transfer
@@ -198,6 +202,7 @@ export const resolveAccountNumber = async (accountNumber: string, bankCode: stri
 };
 
 // Create transfer recipient
+// Create transfer recipient
 export const createTransferRecipient = async (
   recipient: PaystackTransferRecipient
 ): Promise<PaystackTransferRecipientResponse["data"]> => {
@@ -226,6 +231,15 @@ export const createTransferRecipient = async (
   }
 
   try {
+    // Log the data being sent for debugging
+    logger.info("Creating transfer recipient with data:", {
+      type: recipient.type,
+      name: recipient.name,
+      account_number: recipient.account_number,
+      bank_code: recipient.bank_code,
+      currency: recipient.currency,
+    });
+
     // Validate input
     const validatedRecipient = transferRecipientSchema.parse(recipient);
 
@@ -242,17 +256,41 @@ export const createTransferRecipient = async (
     logger.info(`Created Paystack transfer recipient: ${response.data.data.recipient_code}`);
     return response.data.data;
   } catch (error) {
+    // Enhanced error logging
+    if (axios.isAxiosError(error)) {
+      const responseData = error.response?.data;
+      const statusCode = error.response?.status;
+      
+      logger.error("Paystack API error details:", {
+        status: statusCode,
+        message: responseData?.message || error.message,
+        data: responseData,
+        requestData: {
+          type: recipient.type,
+          name: recipient.name,
+          account_number: recipient.account_number,
+          bank_code: recipient.bank_code,
+          currency: recipient.currency,
+        }
+      });
+
+      const errorMessage = responseData?.message || error.message;
+      throw new Error(`Paystack error: ${errorMessage}`);
+    }
+
     const errorMessage =
       error instanceof z.ZodError
         ? `Validation error: ${error.errors.map((e) => e.message).join(", ")}`
         : error instanceof Error
         ? `Paystack error: ${error.message}`
         : "Unknown error creating transfer recipient";
+    
     logger.error(errorMessage, error);
     throw new Error(errorMessage);
   }
 };
 
+// Initiate transfer (payout)
 // Initiate transfer (payout)
 export const initiateTransfer = async (
   transfer: PaystackTransfer
@@ -270,6 +308,15 @@ export const initiateTransfer = async (
   }
 
   try {
+    // Log the transfer data being sent
+    logger.info("Initiating transfer with data:", {
+      source: transfer.source,
+      amount: transfer.amount,
+      recipient: transfer.recipient,
+      reference: transfer.reference,
+      reason: transfer.reason,
+    });
+
     // Validate input
     const validatedTransfer = transferSchema.parse(transfer);
 
@@ -286,6 +333,27 @@ export const initiateTransfer = async (
     logger.info(`Initiated Paystack transfer: ${response.data.data.transfer_code}`);
     return response.data.data;
   } catch (error) {
+    // Enhanced error logging for transfers
+    if (axios.isAxiosError(error)) {
+      const responseData = error.response?.data;
+      const statusCode = error.response?.status;
+      
+      logger.error("Paystack transfer API error details:", {
+        status: statusCode,
+        message: responseData?.message || error.message,
+        data: responseData,
+        requestData: {
+          source: transfer.source,
+          amount: transfer.amount,
+          recipient: transfer.recipient,
+          reference: transfer.reference,
+        }
+      });
+
+      const errorMessage = responseData?.message || error.message;
+      throw new Error(`Paystack error: ${errorMessage}`);
+    }
+
     const errorMessage =
       error instanceof z.ZodError
         ? `Validation error: ${error.errors.map((e) => e.message).join(", ")}`

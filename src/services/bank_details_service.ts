@@ -17,7 +17,7 @@ const bankDetailsSchema = z.object({
     .regex(/^\d{10}$/, "Account number must be a 10-digit number"),
   accountName: z.string().min(1, "Account name is required").nullish(), // Allow null
   currency: z.enum(["NGN"]).default("NGN"),
-  status: z.enum(["pending", "active", "inactive"]).default("pending"),
+ // status: z.enum(["pending", "active", "inactive"]).default("pending"),
 });
 
 
@@ -59,7 +59,7 @@ export const createBankDetails = async (
     ...validatedData,
     accountName: resolvedAccount.account_name,
     recipientCode,
-    status: "active",
+    //status: "active",
     bankName: validatedData.bankName ?? null, // Convert undefined to null
   };
 
@@ -112,7 +112,7 @@ export const updateBankDetails = async (
         ...validatedData,
         recipientCode: recipient.recipient_code,
         accountName: resolvedAccount.account_name,
-        status: "active",
+       // status: "active",
         bankName: validatedData.bankName ?? null, // Convert undefined to null
       };
       logger.info(`Updated Paystack recipient for bank details ${id}: ${recipient.recipient_code}`);
